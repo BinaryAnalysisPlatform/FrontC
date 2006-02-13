@@ -151,7 +151,13 @@ let escape_string str =
 						^ (conv (code mod 8)) in
 			res ^ (build (idx + 1)) in
 	build 0	
-	
+
+let rec has_extension attrs =
+	match attrs with
+	  [] -> false
+	| GNU_EXTENSION::_ -> true
+	| _::attrs -> has_extension attrs	
+
 
 (* 
 ** Base Type Printing
@@ -185,9 +191,11 @@ let rec print_base_type typ =
 	| PROTO (typ, _, _) -> print_base_type typ
 	| OLD_PROTO (typ, _, _) -> print_base_type typ
 	| PTR typ -> print_base_type typ
+	| RESTRICT_PTR typ -> print_base_type typ
 	| ARRAY (typ, _) -> print_base_type typ
 	| CONST typ -> print_base_type typ
 	| VOLATILE typ -> print_base_type typ
+	| GNU_TYPE (attrs, typ) ->  print_attributes attrs; print_base_type typ
 	
 and print_fields id (flds : name_group list) =
 	print id;
@@ -230,7 +238,8 @@ and print_enum id items =
 *)
 and get_base_type typ =
 	match typ with
-	PTR typ -> get_base_type typ
+	  PTR typ -> get_base_type typ
+	| RESTRICT_PTR typ -> get_base_type typ
 	| CONST typ -> get_base_type typ
 	| VOLATILE typ -> get_base_type typ
 	| ARRAY (typ, _) -> get_base_type typ
@@ -238,7 +247,10 @@ and get_base_type typ =
 	
 and print_pointer typ =
 	match typ with
-	PTR typ -> print_pointer typ; print "*"
+	  PTR typ -> print_pointer typ; print "*"
+	| RESTRICT_PTR typ -> 
+		print_pointer typ; print "* __restrict";
+		space ()
 	| CONST typ -> print_pointer typ; print " const "
 	| VOLATILE typ -> print_pointer typ; print " volatile "
 	| ARRAY (typ, _) -> print_pointer typ
@@ -305,6 +317,13 @@ and get_storage sto =
 	| REGISTER -> "register"
 
 and print_name_group (typ, sto, names) =
+	let extension = List.exists
+		(fun (_, _, attrs, _) -> has_extension attrs)
+		names in
+	if extension then begin
+		print "__extension__";
+		space ()
+	end;
 	if sto <> NO_STORAGE then begin
 		print (get_storage sto);
 		space ()
@@ -457,15 +476,7 @@ and print_expression (exp : expression) (lvl : int) =
 		| COMMA exps ->
 			print_comma_exps exps
 		| CONSTANT cst ->
-				(match cst with
-					CONST_INT i -> print i
-					| CONST_FLOAT r -> print r
-					| CONST_CHAR c -> print ("'" ^ (escape_string c) ^ "'")
-					| CONST_STRING s -> print ("\"" ^ (escape_string s) ^ "\"")
-					| CONST_COMPOUND exps ->
-						print "{";
-						print_comma_exps exps;
-						print "}")
+			print_constant cst
 		| VARIABLE name ->
 			print name
 		| EXPR_SIZEOF exp ->
@@ -492,6 +503,23 @@ and print_expression (exp : expression) (lvl : int) =
 			print_statement (BLOCK (decs, stat));
 			print ")" in
 	if lvl > lvl' then print ")" else ()
+
+and print_constant cst =
+	match cst with
+	  CONST_INT i ->
+	  	print i
+	| CONST_FLOAT r ->
+		print r
+	| CONST_CHAR c ->
+		print ("'" ^ (escape_string c) ^ "'")
+	| CONST_STRING s ->
+		print ("\"" ^ (escape_string s) ^ "\"")
+	| CONST_COMPOUND exps ->
+		begin
+			print "{";
+			print_comma_exps exps;
+			print "}"
+		end
 
 
 (*
@@ -590,6 +618,25 @@ and print_statement stat =
 	| GOTO name ->
 		print ("goto " ^ name ^ ";");
 		new_line ()
+	| ASM desc ->
+		print ("asm(\"" ^ (escape_string desc) ^ "\");")
+	| GNU_ASM (desc, output, input, mods) ->
+		print ("asm(" ^ (escape_string desc) ^ "\"");
+		print " : ";		
+		print_commas false print_gnu_asm_arg output;
+		print " : ";
+		print_commas false print_gnu_asm_arg input;
+		if mods <> [] then begin
+			print " : ";
+			print_commas false print mods
+		end;
+		print ");"
+
+and print_gnu_asm_arg (id, desc, exp) =
+	if id <> "" then print ("[" ^ id ^ "]");
+	print ("\"" ^ (escape_string desc) ^ "\"(");
+	print_expression exp 0;
+	print ("\"")
 
 and print_substatement stat =
 	match stat with
@@ -615,21 +662,34 @@ and print_substatement stat =
 ** GCC Attributes
 *)
 and print_attributes attrs =
-	List.iter
-		(fun attr ->
-			space ();
-			print "__attribute__ ";
-			print_attribute attr)
-		attrs
+	match attrs with
+	  [] ->
+	  	()
+	| [GNU_EXTENSION] ->
+		()
+	| _ ->
+		if attrs <> [] then
+			begin
+				print " __attribute__ ((";
+				print_commas false print_attribute attrs;
+				print ")) "
+			end
 
 and print_attribute attr =
 	match attr with
-	NO_ATTR -> ()
-	| ATTR_LIST lst ->
+	  GNU_NONE ->
+		()
+	| GNU_ID id ->
+		print id
+	| GNU_CALL (id, args) ->
+		print id;
 		print "(";
-		print_commas false print_attribute lst;
+		print_commas false print_attribute args;
 		print ")"
-	| ATTR_ID id -> print id
+	| GNU_CST cst ->
+		print_constant cst
+	| GNU_EXTENSION ->
+		print "__extension__"
 
 
 (*
@@ -669,7 +729,11 @@ and print_def def =
 		print ";";
 		new_line ()
 			
-	| TYPEDEF names ->
+	| TYPEDEF (names, attrs) ->
+		if has_extension attrs then begin
+			print "__extension__";
+			space ();
+		end;
 		print "typedef ";
 		print_name_group names;
 		print ";";
