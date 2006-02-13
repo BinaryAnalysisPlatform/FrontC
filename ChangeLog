@@ -1,3 +1,12 @@
+2006-02-13 casse    <casse@irit.fr>
+[VERSION 3.2]
+
+Removed ugly autotool building (no OCAML support, too tricky, not worthy).
+Comme back to usual but powerful simple Make building script.
+Better support for GNU __attribute__ and __extension__ syntax.
+Added support for standard asm and GNU __asm keywords.
+Added support for restrict pointers.
+
 2004-02-28	casse	<hugues.casse@laposte.net>
 
 Added XML conversion support.
