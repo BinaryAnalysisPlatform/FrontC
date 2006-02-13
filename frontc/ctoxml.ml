@@ -261,10 +261,10 @@ and convert_type _type =
 			(if name <> "" then [(id, "enum:" ^ name)] else [])
 			(convert_values values)
 	
-	| PROTO (rtype, args, varargs) ->
+	| PROTO (_, _, _) ->
 		Cxml.new_elt "fun" [] (convert_proto _type)
 	
-	| OLD_PROTO (rtype, pars, vararg) ->
+	| OLD_PROTO (_, _, _) ->
 		Cxml.new_elt "fun" [] [Cxml.new_elt "vararg" [] []]
 
 
@@ -281,10 +281,10 @@ and convert_fundef _type store name vars body =
 		(List.append proto_elts [body_elt])
 
 
-and convert_name store (name, _type, attrs, exp) =
+and convert_name store (name, _type, _, exp) =
 	let attrs = [("id", name); ("store", (convert_storage store AUTO))] in
 	match _type with
-	  PROTO proto ->
+	  PROTO _ ->
 	  	Cxml.new_elt "fundec" attrs (convert_proto _type)
 	| _ ->
 		let type_elt = convert_type _type in
@@ -308,7 +308,7 @@ and convert_def def =
 	match def with
 	  FUNDEF ((_, store, (name, _type, _, _)), (vars, body)) ->
 	  	[convert_fundef _type store name vars body]
-	| OLDFUNDEF (head, args, body) ->
+	| OLDFUNDEF (_, _, _) ->
 		raise UnconsistentDef
 	| DECDEF (_, store, names) ->
 		List.map (convert_name store) names

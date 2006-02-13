@@ -24,7 +24,7 @@ let from_stdin = ref false
 let opts = [
 	("-o", Arg.Set_string out_file,
 		"Output to the given file.");
-	("-pp", Arg.Unit (fun arg -> args := USE_CPP :: !args),
+	("-pp", Arg.Unit (fun _ -> args := USE_CPP :: !args),
 		"Preprocess the input files.");
 	("-proc", Arg.String (fun cpp -> args := (PREPROC cpp) :: !args),
 		"Use the given preprocessor");
