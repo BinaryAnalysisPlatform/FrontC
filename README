@@ -1,4 +1,4 @@
-Front V2.1
+Front V3.2
 ----------
 
   FrontC is C language front-end. It provides the program in "C Abstract Form",
@@ -9,7 +9,7 @@ source works including:
 	- source beautification,
 	- source analysis,
 	- and so on.
-In the version 2.1, it provides also an XML back-end making easier to transform
+In the version 3.1, it provides also an XML back-end making easier to transform
 the C program using XML tools like XSLT (it was my first goal when I perform
 this task).
 
@@ -22,4 +22,4 @@ own directory.
   	ocamlc unix.cma /usr/lib/ocaml/site-lib/frontc.cma ...
 
   Have fun with it.
-
+If you are experiencing problems, feel free to contact me at casse@irit.fr.
