@@ -1,0 +1,90 @@
+# Development rules
+_all: _subdirs_all $(_ALL)
+
+_subdirs_all:
+	@for d in $(SUBDIRS); do cd $$d; $(MAKE) all; cd ..; done
+
+clean: _subdirs_clean
+	rm -rf .dep $(_CLEAN)
+
+_subdirs_clean:
+	@for d in $(SUBDIRS); do cd $$d; $(MAKE) clean; cd ..; done
+
+ifneq ('$(_DEPS)','')
+-include $(_DEPS)
+endif
+
+$(DEP_DIR): $(_PRE_DEPS)
+	@mkdir -p $@
+
+
+# Distribution rules
+DIST_NAME=$(PROJECT)-$(VERSION)
+ifdef RELEASE
+ifneq ('$(RELEASE)','1')
+DIST_NAME=$(PROJECT)-$(VERSION)-$(RELEASE)
+endif
+endif
+_DIST_DIR = $(DIST_NAME)
+dist: _subdirs_dist
+	cp Makefile.head Makefile.tail $(_DIST_DIR)
+	tar cvfz "$(DIST_NAME).tgz" $(_DIST_DIR)
+	@rm -rf $(DIST_NAME)
+
+_subdirs_dist:
+	@mkdir $(_DIST_DIR)
+	@cp -R $(DIST) $(_DIST) $(_DIST_DIR)
+ifdef SUBDIRS
+	@for d in $(SUBDIRS); do \
+		cd $$d; \
+		$(MAKE) _subdirs_dist _DIST_DIR=../$(_DIST_DIR)/$$d; \
+		cd ..; \
+	done
+endif
+
+
+# Install rules
+install: all _subdirs_install $(_INSTALL)
+
+_subdirs_install:
+ifdef SUBDIRS
+	@for d in $(SUBDIRS); do \
+		cd $$d; \
+		$(MAKE) install; \
+		cd ..; \
+	done
+endif
+
+$(BIN_DIR):
+	install -d $(BIN_DIR)
+	
+
+# OCAML Rules
+OCAMLC_CFLAGS += $(patsubst %,-I %,$(OCAMLC_INC) $(OCAML_INC))
+OCAMLOPT_CFLAGS += $(patsubst %,-I %,$(OCAMLOPT_INC) $(OCAML_INC))
+OCAMLC_LDFLAGS += $(patsubst %,%.cma,$(OCAMLC_LIB) $(OCAML_LIB))
+OCAMLOPT_LDFLAGS += $(patsubst %,%.cmxa,$(OCAMLOPT_LIB) $(OCAML_LIB))
+
+%.cmi: %.mli
+	$(OCAMLC) $(OCAMLC_CFLAGS) -o $@ -c $<
+
+%.cmo %.cmi: %.ml
+	$(OCAMLC) $(OCAMLC_CFLAGS) -o $@ -c $<
+
+%.ml %.mli: %.mly
+	$(OCAMLYACC) $(OCAMLYACC_FLAGS) $<
+
+%.ml: %.mll
+	$(OCAMLLEX) $(OCAMLLEX_FLAGS) -o $@ $<
+
+%.cmx: %.ml %.cmi
+	$(OCAMLOPT) $(OCAMLOPT_CFLAGS) -o $@ -c $<
+
+$(DEP_DIR)/%.mli.d: %.mli $(DEP_DIR)
+	@$(OCAMLDEP) $< | sed -e 's/^\(.*\)\.cmx:\(.*\).cmx/\1.cmx:\2.cmi/g' > $@
+
+$(DEP_DIR)/%.d: %.ml $(DEP_DIR)
+	@$(OCAMLDEP) $< | sed -e 's/^\(.*\)\.cmx:\(.*\).cmx/\1.cmx:\2.cmi/g' > $@
+
+test:
+	@echo $(_DEPS)

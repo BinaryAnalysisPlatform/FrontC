@@ -1,0 +1,192 @@
+all: _all
+
+# Predefinition
+_ALL =
+_DEPS =
+_PRE_DEPS =
+DIST =
+_DIST = Makefile
+_BINARY_DIST =
+_INSTALL =
+_UNINSTALL =
+DEP_DIR = .dep
+PROJECT = no_name
+VERSION = 0.0
+MACHINE = $(shell uname --machine)
+SYSTEM = $(shell uname --sysname)
+SYSVERS = $(shell uname --release)
+SUBDIRS =
+export PREFIX=/usr
+export BIN_DIR = $(PREFIX)/bin
+export LIB_DIR = $(PREFIX)/lib
+
+# OCAML Predefinitions
+OCAMLC = ocamlc
+OCAMLOPT = ocamlopt
+OCAMLDEP = ocamldep
+OCAMLYACC = ocamlyacc
+OCAMLLEX = ocamllex
+
+OCAMLC_FLAGS =
+OCAMLOPT_FLAGS =
+OCAMLC_FLAGS =
+OCAMLC_LDFLAGS =
+OCAMLCOPT_LDFLAGS =
+OCAML_LDFLAGS =
+OCAMLC_LIBS =
+OCAMLYACC_FLAGS =
+OCAMLLEX_FLAGS =
+OCAMLC_INC =
+OCAMLOPT_INC =
+OCAML_INC =
+OCAMLC_LIB =
+OCAMLOPT_LIB =
+OCAML_LIB =
+
+export OCAML_SITE = $(LIB_DIR)/ocaml/site-lib/
+
+.PRECIOUS: %.mli
+
+# Source processing
+define ocaml_sources
+	$(patsubst %.mll,%.ml,$(patsubst %.mly,%.ml,$(1)))
+endef
+
+# Library compilation
+define ocaml_byte_code_lib
+
+_ALL += $(1).cma 
+$(1)_MLO = $(call ocaml_sources,$(2))
+$(1)_CMO = $$(patsubst %.ml,%.cmo,$$($(1)_MLO))
+$(1)_MLLO = $$(filter %.mll,$(2))
+$(1)_MLYO = $$(filter %.mly,$(2))
+$(1)_CMIO = $$(patsubst %.cmo,%.cmi,$$($(1)_CMO))
+_DEPS += $$(patsubst %.cmo,$(DEP_DIR)/%.d,$$($(1)_CMO)) \
+	 $$(patsubst %.mly,$(DEP_DIR)/%.mli.d,$$($(1)_MLYO))
+_PRE_DEPS += $$($(1)_MLO)
+_CLEAN += $(1).cma $$($(1)_CMO) \
+	$$($(1)_CMIO) \
+	$$(patsubst %.mll,%.ml,$$($(1)_MLLO)) \
+	$$(patsubst %.mly,%.ml,$$($(1)_MLYO)) \
+	$$(patsubst %.mly,%.mli,$$($(1)_MLYO))
+_DIST += $(2)
+_BINARY_DIST += $(1).cma $(patsubst %.cmo,%.cmi,$$($(1)_CMO))
+_INSTALL += _install_$(1)_CMA
+
+$(1).cma: $$($(1)_CMO)
+	$$(OCAMLC) -a $$($(1)_LDFLAGS) $$(OCAMLC_LDFLAGS) -o $$@ $$($(1)_CMO) $$(OCAMLC_LIBS)
+
+_install_$(1)_CMA:
+	install -d $(OCAML_SITE)/$(1)
+	install $(1).cma $$($(1)_CMIO) $(OCAML_SITE)/$(1)
+	
+endef
+
+define ocaml_native_lib
+
+_ALL += $(1).cmxa 
+$(1)_MLX = $(call ocaml_sources,$(2))
+$(1)_CMX = $$(patsubst %.ml,%.cmx,$$($(1)_MLX))
+$(1)_MLLX = $$(filter %.mll,$(2))
+$(1)_MLYX = $$(filter %.mly,$(2))
+$(1)_CMIX = $$(patsubst %.cmx,%.cmi,$$($(1)_CMX))
+_DEPS += $$(patsubst %.cmx,$(DEP_DIR)/%.d,$$($(1)_CMX)) \
+	 $$(patsubst %.mly,$(DEP_DIR)/%.mli.d,$$($(1)_MLYX))
+_PRE_DEPS += $$($(1)_MLX)
+_CLEAN += $(1).cmxa $(1).a \
+	$$($(1)_CMX) \
+	$$($(1)_CMIX) \
+	$$(patsubst %.cmx,%.o,$$($(1)_CMX)) \
+	$$(patsubst %.mll,%.ml,$$($(1)_MLLX)) \
+	$$(patsubst %.mly,%.ml,$$($(1)_MLYX)) \
+	$$(patsubst %.mly,%.mli,$$($(1)_MLYX))
+_DIST += $(2)
+_BINARY_DIST += $(1).cmxa $(1).a $(patsubst %.cmx,%.cmi,$$($(1)_CMX))
+_INSTALL += _install_$(1)_CMXA
+
+$(1).cmxa: $$($(1)_CMX)
+	$$(OCAMLOPT) -a $$($(1)_LDFLAGS) $$(OCAMLOPT_LDFLAGS) -o $$@ $$($(1)_CMX) $$(OCAMLOPT_LIBS)
+
+_install_$(1)_CMXA:
+	install -d $(OCAML_SITE)/$(1)
+	install $(1).cmxa $(1).a $$($(1)_CMIX) $(OCAML_SITE)/$(1)
+	
+endef
+
+define ocaml_lib
+$(if $(findstring byte_code,$(3)),\
+	$(call ocaml_byte_code_lib,$(1),$(2)),\
+	$(if $(findstring native,$(3)),\
+		$(call ocaml_native_lib,$(1),$(2)),\
+		$(call ocaml_byte_code_lib,$(1),$(2))\
+		$(call ocaml_native_lib,$(1),$(2))\
+))
+endef
+
+define ocaml_install_bin
+
+_INSTALL += _install_$(1)
+_install_$(1): $$(BIN_DIR)
+	install $(1) $$(BIN_DIR)
+
+endef
+
+# Program compilation
+define ocaml_byte_code_prog
+
+_ALL += $(1)
+$(1)_MLO = $(call ocaml_sources,$(2))
+$(1)_CMO = $$(patsubst %.ml,%.cmo,$$($(1)_MLO))
+$(1)_MLLO = $$(filter %.mll,$(2))
+$(1)_MLYO = $$(filter %.mly,$(2))
+_DEPS += $$(patsubst %.cmo,$(DEP_DIR)/%.d,$$($(1)_CMO)) \
+	 $$(patsubst %.mly,$(DEP_DIR)/%.mli.d,$$($(1)_MLYO))
+_PRE_DEPS += $$($(1)_MLO)
+_CLEAN += $(1) $$($(1)_CMO) \
+	$$(patsubst %.cmo,%.cmi,$$($(1)_CMO)) \
+	$$(patsubst %.mll,%.ml,$$($(1)_MLLO)) \
+	$$(patsubst %.mly,%.ml,$$($(1)_MLYO)) \
+	$$(patsubst %.mly,%.mli,$$($(1)_MLYO))
+_DIST += $(2)
+_BINARY_DIST += $(1)
+
+$(1): $$($(1)_CMO)
+	$$(OCAMLC) $$($(1)_LDFLAGS) $$(OCAMLC_LDFLAGS) -o $$@ $$($(1)_ CMO) $$(OCAMLC_LIBS)
+
+$(if $(findstring no_install,$(3)),,$(call ocaml_install_bin,$(1)))
+
+endef
+
+define ocaml_native_prog
+
+_ALL += $(1)
+$(1)_MLX = $(call ocaml_sources,$(2))
+$(1)_CMX = $$(patsubst %.ml,%.cmx,$$($(1)_MLX))
+$(1)_MLLX = $$(filter %.mll,$(2))
+$(1)_MLYX = $$(filter %.mly,$(2))
+_DEPS += $$(patsubst %.cmx,$(DEP_DIR)/%.d,$$($(1)_CMX)) \
+	 $$(patsubst %.mly,$(DEP_DIR)/%.mli.d,$$($(1)_MLYX))
+_PRE_DEPS += $$($(1)_MLX)
+_CLEAN += $(1) \
+	$$($(1)_CMX) \
+	$$(patsubst %.cmx,%.cmi,$$($(1)_CMX)) \
+	$$(patsubst %.cmx,%.o,$$($(1)_CMX)) \
+	$$(patsubst %.mll,%.ml,$$($(1)_MLLX)) \
+	$$(patsubst %.mly,%.ml,$$($(1)_MLYX)) \
+	$$(patsubst %.mly,%.mli,$$($(1)_MLYX))
+_DIST += $(2)
+_BINARY_DIST += $(1).cmxa $(1).a $(patsubst %.cmx,%.cmi,$$($(1)_CMX))
+
+$(1): $$($(1)_CMX)
+	$$(OCAMLOPT) $$($(1)_LDFLAGS) $$(OCAMLOPT_LDFLAGS) -o $$@ $$($(1)_CMX) $$(OCAMLOPT_LIBS)
+
+$(if $(findstring no_install,$(3)),,$(call ocaml_install_bin,$(1)))
+
+endef
+
+define ocaml_prog
+$(if $(findstring native,$(3)),\
+	$(call ocaml_native_prog,$(1),$(2),$(3)),\
+	$(call ocaml_byte_code_prog,$(1),$(2),$(3))\
+)
+endef
