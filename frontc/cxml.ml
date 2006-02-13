@@ -82,6 +82,18 @@ let new_elt name attrs children = ELT(name, attrs, children)
 let new_text text = TEXT text
 
 
+(** Add children to an element node.
+	@param node		Element to add to.
+	@param children	Children to add.
+	@return			Passed element with children added to the end.
+*)
+let add_children node children =
+	match node with
+	  ELT (name, attrs, orig_children)
+	  	-> ELT (name, attrs, List.append orig_children children)
+	| _ -> raise (Invalid_argument "not an element")
+
+
 (** Escape the given attribute value for output.
 	@param text		Text of the attribute.
 	@param quote	Quote character used for the attribute, either '"' or '\''.
