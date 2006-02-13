@@ -2,16 +2,24 @@
 **
 ** Project:	frontc
 ** File:	cabs.ml
-** Version:	2.1
-** Date:	4.7.99
+** Version:	2.2
+** Date:	04.19.05
 ** Author:	Hugues Cassé
 **
-**	1.0	2.19.99	Hugues Cassé	First version.
-**	2.0	3.22.99	Hugues Cassé	Generalization of typed names.
-**	2.1	4.7.99	Hugues Cassé	GNU Statement embedded in expressions managed.
+**	1.0		2.19.99		Hugues Cassé
+**	First version.
+**	2.0		3.22.99		Hugues Cassé
+**	Generalization of typed names.
+**	2.1		4.7.99		Hugues Cassé
+**	GNU Statement embedded in expressions managed.
+**  2.2		04.19.05	Hugues Cassé
+**	Improved support of GCC attributes.
+**  Support of restricted pointers.
 *)
 
-let version = "Cabs 2.1 4.7.99 Hugues Cassé"
+let version = "Cabs 2.2 04.19.05 Hugues Cassé"
+exception BadModifier
+exception BadType
 
 (**
  * Thrown when an unconsistent C abstract syntax is found.
@@ -49,9 +57,10 @@ and base_type =
 	| INT of size * sign	(** "int" type with size and sign modifiers *)
 	| BITFIELD of sign * expression
 		(** Bitfield with sign modifier and size expression *)
-	| FLOAT of bool			(** "float" type with long (true) modifier *)
-	| DOUBLE of bool		(** "doubl" type with long (true) modifier *)
-	| PTR of base_type		(** Pointer "*" to the given type *)
+	| FLOAT of bool				(** "float" type with long (true) modifier *)
+	| DOUBLE of bool			(** "doubl" type with long (true) modifier *)
+	| PTR of base_type			(** Pointer "*" to the given type *)
+	| RESTRICT_PTR of base_type	(** REstricted pointer "*" to the given type. *)
 	| ARRAY of base_type * expression
 		(** Array of the given type with the given expression size (may be NOTHING) *)
 	| STRUCT of string * name_group list
@@ -67,10 +76,11 @@ and base_type =
 		(** "const" modifier *)
 	| VOLATILE of base_type
 		(** "volatile" modifier *)
+	| GNU_TYPE of gnu_attrs * base_type
 
 (** A name in a declaration with identifier, full type, GNU attributes and
  *	initialization expression. *)
-and name = string * base_type * attributes * expression
+and name = string * base_type * gnu_attrs * expression
 
 (** A name group, that is, a simple type following by many name
  *	declaration as [int v, *p, t\[256\];]. *)
@@ -99,7 +109,7 @@ and definition =
 		(** Definition of an old-C K&R style function. *)
 	| DECDEF of name_group
 		(** Declaration of function or definition of a variable. *)
-	| TYPEDEF of name_group
+	| TYPEDEF of name_group * gnu_attrs
 		(** Definition of a typedef. *)
 	| ONLYTYPEDEF of name_group
 		(** Definition of lonely "struct", "union" or "enum". *)
@@ -147,7 +157,12 @@ and statement =
 		(** "label" statement whose sub-statement follows colon ":". *)
 	| GOTO of string
 		(** "goto" statement. *)
+	| ASM of string
+		(** Classical "asm" support. *)
+	| GNU_ASM of string * gnu_asm_arg list * gnu_asm_arg list * string list
+		(** GNU "asm" support. *)
 
+and gnu_asm_arg =  string * string * expression
 
 (* Binary operators identifiers. *)
 and binary_operator =
@@ -243,15 +258,20 @@ and constant =
 		initialization. *)
 
 (** GNU special attribute list.*)
-and attributes = attribute list
+and gnu_attrs = gnu_attr list
 
 (** GNU special attribute. *)
-and attribute =
-	  NO_ATTR
+and gnu_attr =
+	  GNU_NONE
 	  	(** No attribute "()". *)
-	| ATTR_LIST of attribute list
-		(** Attribute list between parentheses. *)
-	| ATTR_ID of string
-		(** Attribute identifier. *)
+	| GNU_CALL of string * gnu_attr list
+		(** Function call. *)
+	| GNU_ID of string
+		(** Single identifier. *)
+	| GNU_CST of constant
+		(** Constant value. *)
+	| GNU_EXTENSION
+		(** Support of __extension__ keyword *)
+
 
 

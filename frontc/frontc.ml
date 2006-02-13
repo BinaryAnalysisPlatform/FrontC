@@ -77,28 +77,46 @@ type parsing_result =
  * in the function definition.
  *)
 let trans_old_fun_def (def: single_name * name_group list * body) =
+	let int_type = INT (NO_SIZE, NO_SIGN) in
 	let ((_type, store, name), par_types, body) = def in
+	let (ident, full_type, attrs, exp) = name in 
 	
 	let (rtype, par_names, vararg) =
-		match _type with
+		match full_type with
 		  OLD_PROTO proto -> proto
-		| _ -> raise UnconsistentDef in
+		| _ ->
+			raise UnconsistentDef in
 	
 	let process_group (rtype, store, names) =
 		List.map
-			(fun (name, _type, _, _) -> (name, (rtype, store, _type)))
+			(fun (name, _type, _, _) ->
+				(name, (rtype, store, _type)))
 			names in
+
 	let par_defs = List.flatten (List.map process_group par_types) in
 	
 	let process_name name =
-		try
-			let (rtype, store, ftype) = List.assoc name par_defs in
-			(rtype, store, (name, ftype, [], NOTHING))
-		with Not_found ->
-			raise UnconsistentDef in
+		let (rtype, store, ftype) =
+			try
+				List.assoc name par_defs
+			with Not_found ->
+				(int_type, NO_STORAGE, int_type) in
+		(rtype, store, (name, ftype, [], NOTHING)) in
+
+	let rec normalize_type _type =
+		match _type with
+		  NO_TYPE -> int_type
+		| CONST _type -> CONST (normalize_type _type)
+		| VOLATILE _type -> VOLATILE (normalize_type _type)
+		| GNU_TYPE (attrs, _type) -> GNU_TYPE (attrs, normalize_type _type)
+		| PTR _type -> PTR (normalize_type _type)
+		| RESTRICT_PTR _type -> RESTRICT_PTR (normalize_type _type)
+		| ARRAY(_type, size) -> ARRAY (normalize_type _type, size)
+		| _ -> _type in
+		
 	let fpars = List.map process_name par_names in
-	
-	FUNDEF (((PROTO (rtype, fpars, vararg)), store, name), body)
+	let proto = PROTO (normalize_type rtype, fpars, vararg) in
+	FUNDEF ((normalize_type _type, store, (ident, proto, attrs, exp)), body)
 
 
 (**
@@ -187,7 +205,15 @@ let parse args =
 			PARSING_OK (Cparser.file
 				Clexer.initial
 				(Lexing.from_function (Clexer.get_buffer Clexer.current_handle)))
-		with Parsing.Parse_error -> PARSING_ERROR in
+		with
+		  Parsing.Parse_error ->
+		  	PARSING_ERROR
+		| Cabs.BadType ->
+			Clexer.display_semantic_error "mal-formed type" ;
+			PARSING_ERROR 
+		| Cabs.BadModifier ->
+			Clexer.display_semantic_error "mal-formed modifier";
+			PARSING_ERROR in
 	
 	(* Cleanup *)
 	if close then close_in real_input;
@@ -241,5 +267,3 @@ let parse_file (file_name : string) (out : out_channel) : parsing_result =
 			("Error while opening " ^ file_name
 			^ ": " ^ msg ^ "\n");
 		PARSING_ERROR
-
-

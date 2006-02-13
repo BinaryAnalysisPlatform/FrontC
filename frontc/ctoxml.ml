@@ -153,7 +153,24 @@ and convert_stat stat =
 		-> Cxml.new_elt "label" [("id", l)] [convert_stat s]
 	| GOTO l
 		-> Cxml.new_elt "goto" [("ref", l)] []
+	| ASM text
+		-> Cxml.new_elt "asm" [] [Cxml.new_text text]
+	| GNU_ASM (text, outs, ins, clobbers)
+		-> Cxml.new_elt "gnu_asm" []
+			((Cxml.new_elt "text" [] [Cxml.new_text text])
+			::(convert_gnu_asm outs ins clobbers))
 
+and convert_gnu_asm outs ins clobbers =
+	let process tag id reg exp =
+		let attrs = if id = "" then [] else [("id", id)] in
+		let attrs = ("reg", reg)::attrs in
+		Cxml.new_elt tag attrs [convert_exp exp] in
+	List.append
+		(List.map (fun (id, reg, exp) -> process "out" id reg exp) outs)
+		(List.append
+			(List.map (fun (id, reg, exp) -> process "in" id reg exp) ins)
+			(List.map (fun reg -> (Cxml.new_elt "clobber" [("reg", reg)] [])) clobbers)
+		)
 
 and convert_seq stat =
 	match stat with
@@ -236,6 +253,7 @@ and convert_type _type =
 	| CONST _type -> Cxml.new_elt "const" [] [convert_type _type]
 	| VOLATILE _type -> Cxml.new_elt "volatile" [] [convert_type _type]
 	| NAMED_TYPE name -> Cxml.new_elt "type" [("ref", name)] []
+	| RESTRICT_PTR _type -> Cxml.new_elt "restrict" [] [convert_type _type]
 	
 	| ARRAY  (_type, size) ->
 		Cxml.new_elt "array" [] [
@@ -266,7 +284,22 @@ and convert_type _type =
 	
 	| OLD_PROTO (_, _, _) ->
 		Cxml.new_elt "fun" [] [Cxml.new_elt "vararg" [] []]
+	
+	| GNU_TYPE (attrs, _type) ->
+		Cxml.add_children (convert_type _type) (List.map convert_gnu_attr attrs)
 
+and convert_gnu_attr attr =
+	match attr with
+	  GNU_NONE
+	  	-> Cxml.new_elt "none" [] []
+	| GNU_ID id
+		-> Cxml.new_elt "id" [("value", id)] []
+	| GNU_CST cst
+		-> convert_const cst
+	| GNU_EXTENSION
+		-> Cxml.new_elt "extension" [] []
+	| GNU_CALL (id, attrs)
+		-> Cxml.new_elt "call" [("id", id)] (List.map convert_gnu_attr attrs)
 
 and convert_fundef _type store name vars body =
 
@@ -312,11 +345,9 @@ and convert_def def =
 		raise UnconsistentDef
 	| DECDEF (_, store, names) ->
 		List.map (convert_name store) names
-	| TYPEDEF (_, store, names) ->
-		List.map (convert_typedef store) names
+	| TYPEDEF ((_, store, names), _) ->
+		List.map (fun name -> convert_typedef store name) names
 	| ONLYTYPEDEF (_type, _, _) ->
 		[convert_onlytypedef _type]
-
-
 
 

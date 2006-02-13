@@ -42,14 +42,13 @@ let parse_error _ =
 (*
 ** Type analysis
 *)
-exception BadModifier
-exception BadType
 type modifier =
 	BASE_SIZE of size
 	| BASE_SIGN of sign
 	| BASE_STORAGE of storage
 	| BASE_VOLATILE
 	| BASE_CONST
+	| BASE_GNU_ATTR of Cabs.gnu_attrs
 
 let apply_mod (typ, sto) modi =
 	let rec mod_root typ =
@@ -66,13 +65,14 @@ let apply_mod (typ, sto) modi =
 		| (PTR typ, _) -> PTR (mod_root typ)
 		| (CONST typ, _) -> CONST (mod_root typ)
 		| (VOLATILE typ, _) -> VOLATILE (mod_root typ)
+		| (GNU_TYPE (attrs, typ), _) -> GNU_TYPE (attrs, mod_root typ)
 		| _ -> raise BadModifier in
 	let check_access typ =
 		match typ with
 		PROTO _ | OLD_PROTO _ | CONST _ | VOLATILE _ -> false
 		| _ -> true in
 	match modi with
-	BASE_SIGN _ -> (mod_root typ, sto)
+	  BASE_SIGN _ -> (mod_root typ, sto)
 	| BASE_SIZE _ -> (mod_root typ, sto)
 	| BASE_CONST ->
 		if (check_access typ) then (CONST typ, sto)
@@ -83,6 +83,8 @@ let apply_mod (typ, sto) modi =
 	| BASE_STORAGE sto' ->
 		if sto = NO_STORAGE then (typ, sto')
 		else raise BadModifier
+	| BASE_GNU_ATTR attrs ->
+		(GNU_TYPE (attrs, typ), sto)
 
 let apply_mods mods fty =
 	List.fold_left apply_mod fty mods
@@ -92,6 +94,7 @@ let set_type tst tin =
 		match typ with
 		NO_TYPE -> tst
 		| PTR typ -> PTR (set typ)
+		| RESTRICT_PTR typ -> RESTRICT_PTR (set typ)
 		| ARRAY (typ, dim) -> ARRAY (set typ, dim)
 		| PROTO (typ, pars, ell) -> PROTO (set typ, pars, ell)
 		| OLD_PROTO (typ, pars, ell) -> OLD_PROTO (set typ, pars, ell)
@@ -147,14 +150,15 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %token <string> CST_FLOAT
 %token <string> CST_STRING
 %token <string> NAMED_TYPE
+%token <Cabs.gnu_attrs> GNU_ATTRS
 
 %token EOF
 %token CHAR INT DOUBLE FLOAT VOID
 %token ENUM STRUCT TYPEDEF UNION
 %token SIGNED UNSIGNED LONG SHORT
-%token VOLATILE EXTERN STATIC CONST AUTO REGISTER
+%token VOLATILE EXTERN STATIC CONST AUTO REGISTER RESTRICT
 
-%token SIZEOF
+%token SIZEOF ASM
 
 %token EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
 %token AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
@@ -175,7 +179,8 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %token WHILE DO FOR
 %token IF ELSE
 
-%token ATTRIBUTE
+/* GNU attributes */
+%token ATTRIBUTE EXTENSION
 
 /* operator precedence */
 %nonassoc 	IF
@@ -194,7 +199,7 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %left	INF SUP INF_EQ SUP_EQ
 %left	INF_INF SUP_SUP
 %left	PLUS MINUS
-%left	STAR SLASH PERCENT CONST VOLATILE
+%left	STAR SLASH PERCENT CONST VOLATILE ATTRIBUTE GNU_ATTRS RESTRICT
 %right	EXCLAM TILDE PLUS_PLUS MINUS_MINUS CAST RPAREN ADDROF
 %left 	LBRACKET
 %left	DOT ARROW LPAREN LBRACE SIZEOF
@@ -221,7 +226,7 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %type <Cabs.name> local_def
 %type <string * Cabs.base_type> local_dec
 
-%type <Cabs.attributes> gcc_attributes
+%type <Cabs.gnu_attrs> gcc_attributes
 %type <Cabs.definition list * Cabs.statement> body
 %type <Cabs.statement> statement opt_stats stats
 %type <Cabs.constant> constant
@@ -251,14 +256,26 @@ global:
 		global_type global_defs SEMICOLON
 			{DECDEF (set_name_group $1 (List.rev $2))}
 |		global_type global_proto body
-			{FUNDEF (set_single $1 $2, $3)}
+			{
+				let (_, base, _, _) = $2 in
+				match base with
+				  PROTO _ ->
+					FUNDEF (set_single $1 $2, $3)
+				| OLD_PROTO _ ->
+					OLDFUNDEF (set_single $1 $2, [], $3)
+				| _ ->
+					assert false
+			}
 |		global_type old_proto old_pardefs body
-			{OLDFUNDEF (set_single $1 $2, List.rev $3, $4)}
+			{ OLDFUNDEF (set_single $1 $2, List.rev $3, $4) }
 |		global_type SEMICOLON
 			{ONLYTYPEDEF (set_name_group $1 [])}
 |		TYPEDEF typedef_type typedef_defs SEMICOLON
 			{let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $3 in
-			TYPEDEF (set_name_group $2 $3)}
+			TYPEDEF (set_name_group (fst $2, snd $2) $3, [])}
+|		gcc_attribute TYPEDEF typedef_type typedef_defs SEMICOLON
+			{let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $4 in
+			TYPEDEF (set_name_group (fst $3, snd $3) $4, $1)}
 ;
 global_type:
 		global_mod_list_opt global_qual
@@ -283,6 +300,7 @@ global_mod:
 |		CONST							{BASE_CONST}
 |		VOLATILE						{BASE_VOLATILE}
 |		EXTERN							{BASE_STORAGE EXTERN}
+|		gcc_attribute					{ BASE_GNU_ATTR $1 }
 ;
 global_qual:
 		qual_type						{$1}
@@ -294,9 +312,9 @@ global_defs:
 |		global_defs COMMA global_def	{$3::$1}
 ;
 global_def:
-		global_dec gcc_attributes
+		global_dec opt_gcc_attributes
 			{(fst $1, snd $1, $2, NOTHING)}
-|		global_dec gcc_attributes EQ init_expression
+|		global_dec opt_gcc_attributes EQ init_expression
 			{(fst $1, snd $1, $2, $4)}
 ;
 global_dec:
@@ -310,6 +328,10 @@ global_dec:
 			{(fst $3, set_type (CONST (PTR NO_TYPE)) (snd $3))}
 |		STAR VOLATILE global_dec
 			{(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
+|		STAR RESTRICT global_dec
+			{(fst $3, set_type (RESTRICT_PTR NO_TYPE) (snd $3))}
+|		STAR gcc_attributes global_dec
+			{(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
 |		global_dec LBRACKET comma_expression RBRACKET
 			{(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
 |		global_dec LBRACKET RBRACKET
@@ -324,16 +346,18 @@ global_dec:
 			{(fst $2, set_type (OLD_PROTO (NO_TYPE, fst $5, snd $5)) (snd $2))}
 ;
 global_proto:
-		global_dec gcc_attributes
+		global_dec opt_gcc_attributes
 			{match (snd $1) with
-				PROTO _ -> (fst $1, snd $1, $2, NOTHING)
-				| _ -> raise BadType}
+			  PROTO _
+			| OLD_PROTO _ ->
+				(fst $1, snd $1, $2, NOTHING)
+			| _ -> assert false}
 ;
 old_proto:
-		global_dec gcc_attributes
+		global_dec opt_gcc_attributes
 			{match (snd $1) with
-				OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
-				| _ -> raise BadType}
+				  OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
+				| _ -> assert false}
 ;
 
 
@@ -427,12 +451,13 @@ local_mod_list:
 |		local_mod_list local_mod		{$2::$1}
 ;
 local_mod:
-		STATIC							{BASE_STORAGE STATIC}
-|		AUTO							{BASE_STORAGE AUTO}
-|		CONST							{BASE_CONST}
-|		VOLATILE						{BASE_VOLATILE}
-|		REGISTER						{BASE_STORAGE REGISTER}
-|		EXTERN							{BASE_STORAGE EXTERN}
+		STATIC							{ BASE_STORAGE STATIC }
+|		AUTO							{ BASE_STORAGE AUTO }
+|		CONST							{ BASE_CONST }
+|		VOLATILE						{ BASE_VOLATILE }
+|		REGISTER						{ BASE_STORAGE REGISTER }
+|		EXTERN							{ BASE_STORAGE EXTERN }
+|		gcc_attribute					{ BASE_GNU_ATTR $1 }
 ;
 local_qual:
 		qual_type						{$1}
@@ -444,9 +469,9 @@ local_defs:
 |		local_defs COMMA local_def		{$3::$1}
 ;
 local_def:
-		local_dec gcc_attributes
+		local_dec opt_gcc_attributes
 			{(fst $1, snd $1, $2, NOTHING)}
-|		local_dec gcc_attributes EQ init_expression
+|		local_dec opt_gcc_attributes EQ init_expression
 			{(fst $1, snd $1, $2, $4)}
 ;
 local_dec:
@@ -456,10 +481,14 @@ local_dec:
 			{Clexer.add_identifier $1;($1, NO_TYPE)}
 |		STAR local_dec
 			{(fst $2, set_type (PTR NO_TYPE) (snd $2))}
+|		STAR RESTRICT local_dec
+			{(fst $3, set_type (RESTRICT_PTR NO_TYPE) (snd $3))}
 |		STAR CONST local_dec
 			{(fst $3, set_type (CONST (PTR NO_TYPE)) (snd $3))}			
 |		STAR VOLATILE local_dec
 			{(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
+|		STAR gcc_attributes local_dec
+			{(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
 |		local_dec LBRACKET comma_expression RBRACKET
 			{(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
 |		local_dec LBRACKET RBRACKET
@@ -498,17 +527,24 @@ typedef_qual:
 typedef_defs:
 		typedef_def						{[$1]}
 |		typedef_defs COMMA typedef_def	{$3::$1}
+;
 typedef_def:
-		typedef_dec						{(fst $1, snd $1, [], NOTHING)}
+		typedef_dec opt_gcc_attributes
+			{(fst $1, snd $1, $2, NOTHING)}
+;
 typedef_dec:
 		IDENT
 			{($1, NO_TYPE)}
 |		STAR typedef_dec
 			{(fst $2, set_type (PTR NO_TYPE) (snd $2))}
+|		STAR RESTRICT typedef_dec
+			{(fst $3, set_type (RESTRICT_PTR NO_TYPE) (snd $3))}
 |		STAR CONST typedef_dec
 			{(fst $3, set_type (CONST (PTR NO_TYPE)) (snd $3))}
 |		STAR VOLATILE typedef_dec
 			{(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
+|		STAR gcc_attributes typedef_dec
+			{(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
 |		typedef_dec LBRACKET comma_expression RBRACKET
 			{(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
 |		typedef_dec LBRACKET RBRACKET
@@ -549,6 +585,7 @@ field_mod_list:
 field_mod:
 		CONST							{BASE_CONST}
 |		VOLATILE						{BASE_VOLATILE}
+|		gcc_attribute					{ BASE_GNU_ATTR $1 }
 ;
 field_qual:	
 		qual_type						{$1}
@@ -569,10 +606,14 @@ field_dec:
 			{($1, NO_TYPE)}
 |		STAR field_dec
 			{(fst $2, set_type (PTR NO_TYPE) (snd $2))}
+|		STAR RESTRICT field_dec
+			{(fst $3, set_type (RESTRICT_PTR NO_TYPE) (snd $3))}
 |		STAR CONST field_dec
 			{(fst $3, set_type (CONST (PTR NO_TYPE)) (snd $3))}
 |		STAR VOLATILE field_dec
 			{(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
+|		STAR gcc_attributes field_dec
+			{(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
 |		field_dec LBRACKET comma_expression RBRACKET
 			{(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
 |		field_dec LBRACKET RBRACKET
@@ -622,6 +663,7 @@ param_mod:
 		CONST							{BASE_CONST}
 |		REGISTER						{BASE_STORAGE REGISTER}
 |		VOLATILE						{BASE_VOLATILE}
+|		gcc_attribute					{ BASE_GNU_ATTR $1 }
 ;
 param_qual:
 		qual_type						{$1}
@@ -629,24 +671,29 @@ param_qual:
 |		param_qual CONST				{(fst $1, BASE_CONST::(snd $1))}
 |		param_qual REGISTER				{(fst $1, (BASE_STORAGE REGISTER)::(snd $1))}
 |		param_qual VOLATILE				{(fst $1, BASE_VOLATILE::(snd $1))}
+|		param_qual gcc_attribute		{(fst $1, (BASE_GNU_ATTR $2)::(snd $1))}
 ;
 param_def:
-		param_dec gcc_attributes
-			{(fst $1, snd $1, $2, NOTHING)}
+		param_dec
+			{ let (name, _type) = $1 in (name, _type, [], NOTHING) } 
 ;
 param_dec:
 		/* empty */
-			{("", NO_TYPE)}
+			{ ("", NO_TYPE) }
 |		IDENT
-			{($1, NO_TYPE)}
+			{ ($1, NO_TYPE) }
 |		NAMED_TYPE
-			{($1, NO_TYPE)}
+			{ ($1, NO_TYPE) }
 |		STAR param_dec
 			{(fst $2, set_type (PTR NO_TYPE) (snd $2))}
+|		STAR RESTRICT param_dec
+			{(fst $3, set_type (RESTRICT_PTR NO_TYPE) (snd $3))}
 |		STAR CONST param_dec
 			{(fst $3, set_type (CONST (PTR NO_TYPE)) (snd $3))}			
 |		STAR VOLATILE param_dec
 			{(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
+|		STAR gcc_attributes param_dec
+			{(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
 |		param_dec LBRACKET comma_expression RBRACKET
 			{(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
 |		param_dec LBRACKET RBRACKET
@@ -687,6 +734,7 @@ only_mod_list:
 only_mod:
 		CONST							{BASE_CONST}
 |		VOLATILE						{BASE_VOLATILE}
+|		gcc_attribute					{ BASE_GNU_ATTR $1 }
 ;
 only_def:
 		only_dec						{$1}
@@ -696,10 +744,14 @@ only_dec:
 			{NO_TYPE}
 |		STAR only_dec
 			{set_type (PTR NO_TYPE) $2}
+|		STAR RESTRICT only_dec
+			{set_type (RESTRICT_PTR NO_TYPE) $3}
 |		STAR CONST only_dec
 			{set_type (CONST (PTR NO_TYPE)) $3}			
 |		STAR VOLATILE only_dec
 			{set_type (VOLATILE (PTR NO_TYPE)) $3}
+|		STAR gcc_attributes only_dec
+			{set_type (GNU_TYPE ($2, PTR NO_TYPE)) $3}
 |		only_dec LBRACKET comma_expression RBRACKET
 			{set_type (ARRAY (NO_TYPE, smooth_expression $3)) $1}
 |		only_dec LBRACKET RBRACKET
@@ -963,31 +1015,103 @@ statement:
 |		CONTINUE SEMICOLON
 			{CONTINUE}				
 |		GOTO IDENT SEMICOLON
-			{GOTO $2}				
+			{GOTO $2}
+|		ASM LPAREN CST_STRING RPAREN SEMICOLON
+			{ ASM $3 }
+|		ASM LPAREN CST_STRING gnu_asm_io gnu_asm_io opt_gnu_asm_mods RPAREN SEMICOLON
+			{ GNU_ASM ($3, List.rev $4, List.rev $5, List.rev $6) }
+;
+
+
+/*** GNU asm ***/
+gnu_asm_io:
+	COLON gnu_asm_args
+		{ $2 }
+;
+
+gnu_asm_args:
+	gnu_asm_arg
+		{ [$1] }
+|	gnu_asm_args COMMA gnu_asm_arg
+		{ $3::$1 }
+;
+
+gnu_asm_arg:
+	CST_STRING LPAREN expression RPAREN
+		{ ("", $1, $3) }
+|	LBRACKET IDENT RBRACKET CST_STRING LPAREN expression RPAREN
+		{ ($2, $4, $6) }
+;
+
+opt_gnu_asm_mods:
+	/* empty */
+		{ [] }
+|	COLON gnu_asm_mods
+		{ $2 }
+;
+
+gnu_asm_mods:
+	CST_STRING
+		{ [$1] }
+|	gnu_asm_mods COMMA CST_STRING
+		{ $3::$1 }
 ;
 
 
 /*** GCC attributes ***/
+opt_gcc_attributes:
+	/* empty */
+		{ [] }
+|	gcc_attributes
+		{ List.rev $1 }
+
 gcc_attributes:
-		/* empty */						{[]}	
-|		attributes						{List.rev $1}
+	gcc_attribute
+		{ $1 }
+|	gcc_attributes gcc_attribute
+		{ List.append $1 $2 }
+
+gcc_attribute:
+	ATTRIBUTE LPAREN LPAREN opt_gnu_args RPAREN RPAREN
+		{ List.rev $4 }
+/*|	GNU_ATTRS
+		{ $1 }*/
+|	EXTENSION
+		{ [GNU_EXTENSION] }
 ;
 
-attributes:
-		attribute						{[$1]}
-|		attributes attribute			{$2::$1}
+opt_gnu_args:
+	/* empty */
+		{ [] }
+|	gnu_args
+		{ $1 }
 ;
 
-attribute:
-		ATTRIBUTE LPAREN args RPAREN	{ATTR_LIST (List.rev $3)}
+gnu_args:
+	gnu_arg
+		{[$1]}
+|	gnu_args COMMA gnu_arg
+		{$3::$1}
 ;
-args:
-		arg								{[$1]}
-|		args arg						{$2::$1}
+
+gnu_arg:
+	gnu_id
+		{ GNU_ID $1 }
+|	constant
+		{ GNU_CST $1 }
+|	gnu_id LPAREN opt_gnu_args RPAREN
+		{ GNU_CALL ($1, List.rev $3) }
 ;
-arg:
-		IDENT							{ATTR_ID $1}
-|		LPAREN args RPAREN				{ATTR_LIST (List.rev $2)}
+
+gnu_id:
+	IDENT
+		{ $1 }
+|	GNU_ATTRS
+		{
+			match $1 with
+			  [(Cabs.GNU_ID name)] -> name
+			| _ -> assert false
+		}
 ;
 
 %%

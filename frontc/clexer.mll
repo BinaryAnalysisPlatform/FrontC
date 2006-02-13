@@ -17,6 +17,8 @@
 **								characters.
 **	e	9.1.99	Hugues Cassé	Fix, '\0' now recognized.
 **	f	10.8.99	Hugues Cassé	Understand "__const" GCC.
+** 1.1	04.150.05 Hugues Cassé	Added support for __XXX__ GNU attributes.
+**								Added "restrict" keyword.
 *)
 {
 open Cparser
@@ -51,6 +53,8 @@ let init_lexicon _ =
 		("signed", SIGNED);
 		("unsigned", UNSIGNED);
 		("volatile", VOLATILE);
+		("__restrict", RESTRICT);
+		("restrict", RESTRICT);	(** Non-supported by GCC ??? *)
 		("char", CHAR);
 		("int", INT);
 		("float", FLOAT);
@@ -72,9 +76,12 @@ let init_lexicon _ =
 		("for", FOR);
 		("if", IF);
 		("else", ELSE);
-		(*** Implementations ***)
-		("__attribute__", ATTRIBUTE)
-	]
+		("asm", ASM);
+		
+		(*** Specific GNU ***)
+		("__attribute__", ATTRIBUTE);
+		("__extension__", EXTENSION)
+]
 
 let add_type name =
 	StringHashtbl.add lexicon name (NAMED_TYPE name)
@@ -102,8 +109,10 @@ let add_identifier name =
 ** Useful primitives
 *)
 let rem_quotes str = String.sub str 1 ((String.length str) - 2)
-let scan_ident id = try StringHashtbl.find lexicon id
-	with Not_found -> IDENT id
+let scan_ident id =
+	try StringHashtbl.find lexicon id
+	with Not_found ->
+		IDENT id
 (*
 ** Buffer processor
 *)
@@ -164,6 +173,9 @@ let display_error msg token_start token_end =
 		)
 	);
 	flush (out_channel !current_handle)
+
+let display_semantic_error msg =
+	display_error msg (pos !current_handle) (pos !current_handle)
 
 
 (*** Error handling ***)
