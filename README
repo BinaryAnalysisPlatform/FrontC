@@ -1,0 +1,25 @@
+Front V2.1
+----------
+
+  FrontC is C language front-end. It provides the program in "C Abstract Form",
+a tree representation of the original C source. It may be used for many
+source works including:
+	- compilation,
+	- source pre-processing,
+	- source beautification,
+	- source analysis,
+	- and so on.
+In the version 2.1, it provides also an XML back-end making easier to transform
+the C program using XML tools like XSLT (it was my first goal when I perform
+this task).
+
+  FrontC is an OCAML library and is easier to use with this language.
+Usually, it is installed in the /usr/lib/ocaml/site-lib where it creates its
+own directory.
+  For compiling with FrontC, you must have a command like:
+	ocamlc -I/usr/lib/ocaml/site-lib/frontc ...
+  And for linking, it may be:
+  	ocamlc unix.cma /usr/lib/ocaml/site-lib/frontc.cma ...
+
+  Have fun with it.
+

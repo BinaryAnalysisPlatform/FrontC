@@ -1,0 +1,6 @@
+aclocal.m4
+configure
+install-sh
+COPYING
+missing
+mkinstalldirs

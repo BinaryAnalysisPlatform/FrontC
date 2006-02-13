@@ -1,0 +1,10 @@
+AC_INIT(frontc/frontc.ml)
+AM_INIT_AUTOMAKE(FrontC,3.1-2)
+
+AM_OCAML_SITE()
+AM_OCAML_USE()
+AM_OCAML_OPT()
+AM_OCAML_LEX()
+AM_OCAML_YACC()
+
+AC_OUTPUT([Makefile frontc/Makefile ctoxml/Makefile], [])

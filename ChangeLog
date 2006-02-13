@@ -1,0 +1,5 @@
+2004-02-28	casse	<hugues.casse@laposte.net>
+
+Added XML conversion support.
+Added improved loading routines allowing the use of preprocessors.
+Packaged and compiled using GNU AutoConf and AutoMake (customized for OCAML).
