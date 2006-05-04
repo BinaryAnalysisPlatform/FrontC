@@ -4,11 +4,22 @@ _all: _subdirs_all $(_ALL)
 _subdirs_all:
 	@for d in $(SUBDIRS); do cd $$d; $(MAKE) all; cd ..; done
 
-clean: _subdirs_clean
+clean: _clean _subdirs_clean
+
+_clean:
 	rm -rf .dep $(_CLEAN)
 
 _subdirs_clean:
 	@for d in $(SUBDIRS); do cd $$d; $(MAKE) clean; cd ..; done
+
+distclean: _clean _subdirs_distclean
+ifneq ($(_DISTCLEAN),)
+	rm -rf $(_DIST_CLEAN)
+endif
+
+_subdirs_distclean:
+	@for d in $(SUBDIRS); do cd $$d; $(MAKE) distclean; cd ..; done
+
 
 ifneq ('$(_DEPS)','')
 -include $(_DEPS)
@@ -24,6 +35,7 @@ ifdef RELEASE
 ifneq ('$(RELEASE)','1')
 DIST_NAME=$(PROJECT)-$(VERSION)-$(RELEASE)
 endif
+
 endif
 _DIST_DIR = $(DIST_NAME)
 dist: _subdirs_dist
