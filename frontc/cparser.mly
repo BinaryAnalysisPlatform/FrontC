@@ -142,6 +142,18 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 	((if t1 = NO_TYPE then t2 else
 		if t2 = NO_TYPE then t1 else  raise BadModifier),
 	List.append q1 q2)
+
+(*** Line management ***)
+let set_line (file, line) stat =
+	if Clexer.linerec !Clexer.current_handle
+	then Cabs.STAT_LINE (stat, file, line)
+	else stat
+
+let set_eline (file, line) expr =
+	if Clexer.linerec !Clexer.current_handle
+	then Cabs.EXPR_LINE (expr, file, line)
+	else expr
+
 %}
 
 %token <string> IDENT
@@ -160,8 +172,8 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 
 %token SIZEOF ASM
 
-%token EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
-%token AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
+%token <string * int> EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
+%token <string * int> AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %token ARROW DOT
 
 %token EQ_EQ EXCLAM_EQ INF SUP INF_EQ SUP_EQ
@@ -171,13 +183,13 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %token INF_INF SUP_SUP
 %token PLUS_PLUS MINUS_MINUS
 
-%token RPAREN LPAREN RBRACE LBRACE LBRACKET RBRACKET
-%token COLON SEMICOLON COMMA ELLIPSIS QUEST
+%token <string * int> RPAREN LPAREN RBRACE LBRACE LBRACKET RBRACKET
+%token <string * int> COLON SEMICOLON COMMA ELLIPSIS QUEST
 
-%token BREAK CONTINUE GOTO RETURN
-%token SWITCH CASE DEFAULT
-%token WHILE DO FOR
-%token IF ELSE
+%token <string * int> BREAK CONTINUE GOTO RETURN
+%token <string * int> SWITCH CASE DEFAULT
+%token <string * int> WHILE DO FOR
+%token <string * int> IF ELSE
 
 /* GNU attributes */
 %token ATTRIBUTE EXTENSION
@@ -227,7 +239,7 @@ let apply_qual ((t1, q1) : base_type * modifier list)
 %type <string * Cabs.base_type> local_dec
 
 %type <Cabs.gnu_attrs> gcc_attributes
-%type <Cabs.definition list * Cabs.statement> body
+%type <(string * int) * (Cabs.definition list * Cabs.statement)> body
 %type <Cabs.statement> statement opt_stats stats
 %type <Cabs.constant> constant
 %type <Cabs.expression> expression init_expression opt_expression
@@ -260,14 +272,14 @@ global:
 				let (_, base, _, _) = $2 in
 				match base with
 				  PROTO _ ->
-					FUNDEF (set_single $1 $2, $3)
+					FUNDEF (set_single $1 $2, (snd $3))
 				| OLD_PROTO _ ->
-					OLDFUNDEF (set_single $1 $2, [], $3)
+					OLDFUNDEF (set_single $1 $2, [], (snd $3))
 				| _ ->
 					assert false
 			}
 |		global_type old_proto old_pardefs body
-			{ OLDFUNDEF (set_single $1 $2, List.rev $3, $4) }
+			{ OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
 |		global_type SEMICOLON
 			{ONLYTYPEDEF (set_name_group $1 [])}
 |		TYPEDEF typedef_type typedef_defs SEMICOLON
@@ -872,13 +884,13 @@ expression:
 |		expression DOT NAMED_TYPE
 			{MEMBEROF ($1, $3)}
 |		LPAREN body RPAREN
-			{GNU_BODY $2}
+			{Clexer.test_gcc(); set_eline $1 (GNU_BODY (snd $2))}
 |		LPAREN comma_expression RPAREN
-			{(smooth_expression $2)}
+			{set_eline $1 (smooth_expression $2)}
 |		LPAREN only_type RPAREN expression %prec CAST
-			{CAST ($2, $4)}
+			{set_eline $1 (CAST ($2, $4))}
 |		expression LPAREN opt_expression RPAREN
-			{CALL ($1, list_expression $3)}
+			{set_eline $2 (CALL ($1, list_expression $3))}
 |		expression LBRACKET comma_expression RBRACKET
 			{INDEX ($1, smooth_expression $3)}
 |		expression QUEST expression COLON expression
@@ -920,27 +932,27 @@ expression:
 |		expression  SUP_SUP expression
 			{BINARY(SHR ,$1 , $3)}		
 |		expression EQ expression
-			{BINARY(ASSIGN ,$1 , $3)}			
+			{set_eline $2 (BINARY(ASSIGN ,$1 , $3))}
 |		expression PLUS_EQ expression
-			{BINARY(ADD_ASSIGN ,$1 , $3)}		
+			{set_eline $2 (BINARY(ADD_ASSIGN ,$1 , $3))}
 |		expression MINUS_EQ expression		
-			{BINARY(SUB_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(SUB_ASSIGN ,$1 , $3))}
 |		expression STAR_EQ expression		
-			{BINARY(MUL_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(MUL_ASSIGN ,$1 , $3))}
 |		expression SLASH_EQ expression		
-			{BINARY(DIV_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(DIV_ASSIGN ,$1 , $3))}
 |		expression PERCENT_EQ expression	
-			{BINARY(MOD_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(MOD_ASSIGN ,$1 , $3))}
 |		expression AND_EQ expression		
-			{BINARY(BAND_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(BAND_ASSIGN ,$1 , $3))}
 |		expression PIPE_EQ expression		
-			{BINARY(BOR_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(BOR_ASSIGN ,$1 , $3))}
 |		expression CIRC_EQ expression		
-			{BINARY(XOR_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(XOR_ASSIGN ,$1 , $3))}
 |		expression INF_INF_EQ expression	
-			{BINARY(SHL_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(SHL_ASSIGN ,$1 , $3))}
 |		expression SUP_SUP_EQ expression
-			{BINARY(SHR_ASSIGN ,$1 , $3)}
+			{set_eline $2 (BINARY(SHR_ASSIGN ,$1 , $3))}
 ;
 constant:
 		CST_INT							{CONST_INT $1}					
@@ -956,13 +968,13 @@ string_list:
 
 /*** statements ***/
 body_begin:
-		LBRACE 							{Clexer.push_context ()}
+		LBRACE 							{Clexer.push_context (); $1}
 ;
 body_middle:
 		opt_locals opt_stats 			{($1, $2)}
 ;
 body:
-		body_begin body_middle RBRACE 	{Clexer.pop_context(); $2}
+		body_begin body_middle RBRACE 	{Clexer.pop_context(); ($1, $2)}
 ;
 opt_locals:
 		/* empty */						{[]}
@@ -982,44 +994,44 @@ stats:
 ;
 statement:
 		SEMICOLON
-			{NOP}							
+			{set_line $1 NOP}							
 |		comma_expression SEMICOLON
-			{COMPUTATION (smooth_expression $1)}			
+			{set_line $2 (COMPUTATION (smooth_expression $1))}
 |		body
-			{BLOCK $1}					
+			{set_line (fst $1) (BLOCK (snd $1))}
 |		IF LPAREN comma_expression RPAREN statement %prec IF
-			{IF (smooth_expression $3, $5, NOP)}
+			{set_line $1 (IF (smooth_expression $3, $5, NOP))}
 |		IF LPAREN comma_expression RPAREN statement ELSE statement
-			{IF (smooth_expression $3, $5, $7)}
+			{set_line $1 (IF (smooth_expression $3, $5, set_line $6 $7))}
 |		SWITCH LPAREN comma_expression RPAREN statement
-			{SWITCH (smooth_expression $3, $5)}
+			{set_line $1 (SWITCH (smooth_expression $3, $5))}
 |		WHILE LPAREN comma_expression RPAREN statement
-			{WHILE (smooth_expression $3, $5)}
+			{set_line $1 (WHILE (smooth_expression $3, $5))}
 |		DO statement WHILE LPAREN comma_expression RPAREN SEMICOLON
-			{DOWHILE (smooth_expression $5, $2)}
+			{set_line $1 (DOWHILE (smooth_expression $5, $2))}
 |		FOR LPAREN opt_expression SEMICOLON opt_expression
 		SEMICOLON opt_expression RPAREN statement
-			{FOR ($3, $5, $7, $9)}
+			{set_line $1 (FOR ($3, $5, $7, $9))}
 |		IDENT COLON statement
 			{LABEL ($1, $3)}			
 |		CASE expression COLON statement
-			{CASE ($2, $4)}
+			{set_line $1 (CASE ($2, $4))}
 |		DEFAULT COLON statement
-			{DEFAULT $3}		
+			{set_line $1 (DEFAULT $3)}		
 |		RETURN SEMICOLON
-			{RETURN NOTHING}					
+			{set_line $1 (RETURN NOTHING)}	
 |		RETURN expression SEMICOLON
-			{RETURN $2}		
+			{set_line $1 (RETURN $2)}
 |		BREAK SEMICOLON
-			{BREAK}						
+			{set_line $1 BREAK}
 |		CONTINUE SEMICOLON
-			{CONTINUE}				
+			{set_line $1 CONTINUE}
 |		GOTO IDENT SEMICOLON
-			{GOTO $2}
+			{set_line $1 (GOTO $2)}
 |		ASM LPAREN CST_STRING RPAREN SEMICOLON
 			{ ASM $3 }
 |		ASM LPAREN CST_STRING gnu_asm_io gnu_asm_io opt_gnu_asm_mods RPAREN SEMICOLON
-			{ GNU_ASM ($3, List.rev $4, List.rev $5, List.rev $6) }
+			{ Clexer.test_gcc(); GNU_ASM ($3, List.rev $4, List.rev $5, List.rev $6) }
 ;
 
 
@@ -1061,9 +1073,9 @@ gnu_asm_mods:
 /*** GCC attributes ***/
 opt_gcc_attributes:
 	/* empty */
-		{ [] }
+		{ Clexer.test_gcc(); [] }
 |	gcc_attributes
-		{ List.rev $1 }
+		{ Clexer.test_gcc(); List.rev $1 }
 
 gcc_attributes:
 	gcc_attribute
