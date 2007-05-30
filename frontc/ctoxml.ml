@@ -115,6 +115,10 @@ and convert_exp exp =
 		Cxml.new_elt "memberofptr" [("field", n)] [convert_exp b]
 	| GNU_BODY (d, s) ->
 		Cxml.new_elt "body" [] (convert_block (d, s))
+	| EXPR_LINE (expr, file, line) ->
+		Cxml.new_elt "expr_line"
+			[("file", file); ("line", string_of_int line)]
+			[convert_exp expr]
 
 
 and convert_stat stat =
@@ -159,6 +163,10 @@ and convert_stat stat =
 		-> Cxml.new_elt "gnu_asm" []
 			((Cxml.new_elt "text" [] [Cxml.new_text text])
 			::(convert_gnu_asm outs ins clobbers))
+	| STAT_LINE (stat, file, line)
+		-> Cxml.new_elt "stat_line"
+			[("file", file); ("line", (string_of_int line))]
+			[convert_stat stat]
 
 and convert_gnu_asm outs ins clobbers =
 	let process tag id reg exp =

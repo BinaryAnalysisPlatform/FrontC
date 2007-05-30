@@ -28,8 +28,51 @@ let version = "Clexer V1.0f 10.8.99 Hugues Cassé"
 
 
 (*
+ * input handle
+ *)
+type handle = {
+	h_interactive: bool;
+	h_in_channel: in_channel;
+	mutable h_line: string;
+	mutable h_buffer: string;
+	mutable h_pos: int;
+	mutable h_lineno: int;
+	h_out_channel: out_channel;
+	mutable h_file_name: string;
+	h_gcc: bool;
+	h_linerec: bool;
+}
+let current_handle = ref {
+		h_interactive = false;
+		h_in_channel = stdin;
+		h_line = "";
+		h_buffer = "";
+		h_pos = 0;
+		h_lineno = 0;
+		h_out_channel = stdout;
+		h_file_name = "";
+		h_gcc = true;
+		h_linerec = false; 
+	}
+
+let interactive (h : handle) = h.h_interactive
+let in_channel (h : handle) = h.h_in_channel
+let line (h : handle) = h.h_line
+let buffer (h : handle) = h.h_buffer
+let pos (h : handle) = h.h_pos
+let real_pos (i : int) (h : handle) = i - h.h_pos
+let lineno (h : handle) = h.h_lineno
+let out_channel (h : handle) = h.h_out_channel
+let file_name (h : handle) = h.h_file_name
+let linerec (h: handle) = h.h_linerec
+let curfile _ = (!current_handle).h_file_name
+let curline _ = (!current_handle).h_lineno
+
+(*
 ** Keyword hashtable
 *)
+let id token _ = token
+
 module HashString =
 struct
 	type t = string
@@ -43,48 +86,48 @@ let init_lexicon _ =
 	List.iter
 	(fun (key, token) -> StringHashtbl.add lexicon key token)
 	[
-		("auto", AUTO);
-		("const", CONST); ("__const", CONST);
-		("static", STATIC);
-		("extern", EXTERN);
-		("long", LONG);
-		("short", SHORT);
-		("register", REGISTER);
-		("signed", SIGNED);
-		("unsigned", UNSIGNED);
-		("volatile", VOLATILE);
-		("__restrict", RESTRICT);
-		("restrict", RESTRICT);	(** Non-supported by GCC ??? *)
-		("char", CHAR);
-		("int", INT);
-		("float", FLOAT);
-		("double", DOUBLE);
-		("void", VOID);
-		("enum", ENUM);
-		("struct", STRUCT);
-		("typedef", TYPEDEF);
-		("union", UNION);
-		("break", BREAK);
-		("continue", CONTINUE);
-		("goto", GOTO);
-		("return", RETURN);
-		("switch", SWITCH);
-		("case", CASE);
-		("default", DEFAULT);
-		("while", WHILE);
-		("do", DO);
-		("for", FOR);
-		("if", IF);
-		("else", ELSE);
-		("asm", ASM);
+		("auto", id AUTO);
+		("const", id CONST); ("__const", id CONST);
+		("static", id STATIC);
+		("extern", id EXTERN);
+		("long", id LONG);
+		("short", id SHORT);
+		("register", id REGISTER);
+		("signed", id SIGNED);
+		("unsigned", id UNSIGNED);
+		("volatile", id VOLATILE);
+		("__restrict", id RESTRICT);
+		("restrict", id RESTRICT);	(** Non-supported by GCC ??? *)
+		("char", id CHAR);
+		("int", id INT);
+		("float", id FLOAT);
+		("double", id DOUBLE);
+		("void", id VOID);
+		("enum", id ENUM);
+		("struct", id STRUCT);
+		("typedef", id TYPEDEF);
+		("union", id UNION);
+		("break", fun _ -> BREAK (curfile(), curline()));
+		("continue", fun _ -> CONTINUE (curfile(), curline()));
+		("goto", fun _ -> GOTO (curfile(), curline()));
+		("return", fun _ -> RETURN (curfile(), curline()));
+		("switch", fun _ -> SWITCH (curfile(), curline()));
+		("case", fun _ -> CASE (curfile(), curline()));
+		("default", fun _ -> DEFAULT (curfile(), curline()));
+		("while", fun _ -> WHILE (curfile(), curline()));
+		("do", fun _ -> DO (curfile(), curline()));
+		("for", fun _ -> FOR (curfile(), curline()));
+		("if", fun _ -> IF (curfile(), curline()));
+		("else", fun _ -> ELSE (curfile(), curline()));
+		("asm", id ASM);
 		
 		(*** Specific GNU ***)
-		("__attribute__", ATTRIBUTE);
-		("__extension__", EXTENSION)
+		("__attribute__", id ATTRIBUTE);
+		("__extension__", id EXTENSION)
 ]
 
 let add_type name =
-	StringHashtbl.add lexicon name (NAMED_TYPE name)
+	StringHashtbl.add lexicon name (id (NAMED_TYPE name))
 
 let context : string list list ref = ref []
 
@@ -102,7 +145,7 @@ let add_identifier name =
 	[] -> raise (InternalError "Empty context stack")
 	| con::sub ->
 		(context := (name::con)::sub;
-		StringHashtbl.add lexicon name (IDENT name))
+		StringHashtbl.add lexicon name (id (IDENT name)))
 
 
 (*
@@ -110,35 +153,18 @@ let add_identifier name =
 *)
 let rem_quotes str = String.sub str 1 ((String.length str) - 2)
 let scan_ident id =
-	try StringHashtbl.find lexicon id
+	try (StringHashtbl.find lexicon id) ()
 	with Not_found ->
 		IDENT id
 (*
 ** Buffer processor
 *)
 
-(*** input handle ***)
-type handle =
-	bool * in_channel * string * string * int * int * out_channel * string
-let current_handle = ref (false, stdin, "", "", 0, 0, stdout, "")
-
-let interactive (h : handle) = let (i, _, _, _, _, _, _, _) = h in i
-let in_channel (h : handle) = let (_, c, _, _, _, _, _, _) = h in c
-let line (h : handle) = let (_, _, l, _, _, _, _, _) = h in l
-let buffer (h : handle) = let (_, _, _, b, _, _, _, _) = h in b
-let pos (h : handle) = let (_, _, _, _, p, _, _, _) = h in p
-let real_pos (i : int) (h : handle) = let (_, _, _, _, p, _, _, _) = h in i - p
-let lineno (h : handle) = let (_, _, _, _, _, n, _, _) = h in n
-let out_channel (h : handle) = let (_, _, _, _, _, _, out, _) = h in out
-let file_name (h : handle) = let (_, _, _, _, _, _, _, name) = h in name
-
 let set_line num =
-	let (inter, cha, lin, buf, pos, _, out, name) = !current_handle in
-	current_handle := (inter, cha, lin, buf, pos, num - 1, out, name)
+	(!current_handle).h_lineno <- num - 1
 
 let set_name name =
-	let (inter, cha, lin, buf, pos, num, out, _) = !current_handle in
-	current_handle := (inter, cha, lin, buf, pos, num, out, name)
+	(!current_handle).h_file_name <- name
 
 
 (*** syntax error building ***)
@@ -182,6 +208,8 @@ let display_semantic_error msg =
 let error msg =
 	display_error msg (Parsing.symbol_start ()) (Parsing.symbol_end ());
 	raise Parsing.Parse_error
+
+let test_gcc _ = if not (!current_handle).h_gcc then  error "forbidden GCC syntax"
 
 
 (*** escape character management ***)
@@ -241,6 +269,7 @@ let oct_escape = '\\' octdigit  octdigit octdigit
 
 rule initial =
 	parse 	"/*"			{let _ = comment lexbuf in initial lexbuf}
+	|		"//"			{test_gcc (); let _ = line_comment lexbuf in initial lexbuf }
 	|		blank			{initial lexbuf}
 	|		'#'				{line lexbuf}
 	
@@ -251,25 +280,25 @@ rule initial =
 	|		octnum			{CST_INT (Lexing.lexeme lexbuf)}
 	|		intnum			{CST_INT (Lexing.lexeme lexbuf)}
 
-	|		"!quit!"			{EOF}
-	|		"..."			{ELLIPSIS}
-	|		"+="			{PLUS_EQ}
-	|		"-="			{MINUS_EQ}
-	|		"*="			{STAR_EQ}
-	|		"/="			{SLASH_EQ}
-	|		"%="			{PERCENT_EQ}
-	|		"|="			{PIPE_EQ}
-	|		"&="			{AND_EQ}
-	|		"^="			{CIRC_EQ}
-	|		"<<="			{INF_INF_EQ}
-	|		">>="			{SUP_SUP_EQ}
+	|		"!quit!"		{EOF}
+	|		"..."			{ELLIPSIS(curfile(), curline())}
+	|		"+="			{PLUS_EQ(curfile(), curline())}
+	|		"-="			{MINUS_EQ(curfile(), curline())}
+	|		"*="			{STAR_EQ(curfile(), curline())}
+	|		"/="			{SLASH_EQ(curfile(), curline())}
+	|		"%="			{PERCENT_EQ(curfile(), curline())}
+	|		"|="			{PIPE_EQ(curfile(), curline())}
+	|		"&="			{AND_EQ(curfile(), curline())}
+	|		"^="			{CIRC_EQ(curfile(), curline())}
+	|		"<<="			{INF_INF_EQ(curfile(), curline())}
+	|		">>="			{SUP_SUP_EQ(curfile(), curline())}
 	|		"<<"			{INF_INF}
 	|		">>"			{SUP_SUP}
 	|		"=="			{EQ_EQ}
 	|		"!="			{EXCLAM_EQ}
 	|		"<="			{INF_EQ}
 	|		">="			{SUP_EQ}
-	|		"="				{EQ}
+	|		"="				{EQ(curfile(), curline())}
 	|		"<"				{INF}
 	|		">"				{SUP}
 	|		"++"			{PLUS_PLUS}
@@ -286,18 +315,18 @@ rule initial =
 	|		'&'				{AND}
 	|		'|'				{PIPE}
 	|		'^'				{CIRC}
-	|		'?'				{QUEST}
-	|		':'				{COLON}
+	|		'?'				{QUEST(curfile(), curline())}
+	|		':'				{COLON(curfile(), curline())}
 	|		'~'				{TILDE}
 		
-	|		'{'				{LBRACE}
-	|		'}'				{RBRACE}
-	|		'['				{LBRACKET}
-	|		']'				{RBRACKET}
-	|		'('				{LPAREN}
-	|		')'				{RPAREN}
-	|		';'				{SEMICOLON}
-	|		','				{COMMA}
+	|		'{'				{LBRACE(curfile(), curline())}
+	|		'}'				{RBRACE(curfile(), curline())}
+	|		'['				{LBRACKET(curfile(), curline())}
+	|		']'				{RBRACKET(curfile(), curline())}
+	|		'('				{LPAREN(curfile(), curline())}
+	|		')'				{RPAREN(curfile(), curline())}
+	|		';'				{SEMICOLON(curfile(), curline())}
+	|		','				{COMMA(curfile(), curline())}
 	|		'.'				{DOT}
 	|		"sizeof"		{SIZEOF}
 	|		ident			{scan_ident (Lexing.lexeme lexbuf)}
@@ -311,6 +340,10 @@ rule initial =
 and comment =
 	parse 	"*/"			{()}
 	| 		_ 				{comment lexbuf}
+
+and line_comment =
+	parse 	"\n"			{()}
+	| 		_ 				{line_comment lexbuf}
 
 (* # <line number> <file name> ... *)
 and line =
@@ -354,19 +387,20 @@ and chr =
 {
 
 (*** get_buffer ***)
-let get_buffer (h : handle ref) (dst : string) (len : int) : int =
-	let (inter, chan, line, buffer, pos, lineno, out, name) = !h in
+let get_buffer (hr : handle ref) (dst : string) (len : int) : int =
+	(*let (inter, chan, line, buffer, pos, lineno, out, name) = !hr in*)
+	let h = !hr in
 	try
 		let (bufferp, linep, posp, linenop) =
-			if buffer <> ""
-			then (buffer, line , pos, lineno)
+			if h.h_buffer <> ""
+			then (h.h_buffer, h.h_line , h.h_pos, h.h_lineno)
 			else
-				let buffer = (input_line chan) ^ "\n" in
+				let buffer = (input_line h.h_in_channel) ^ "\n" in
 				(
 					buffer,
-					(if inter then line ^ buffer else buffer),
-					(if inter then pos else pos + (String.length line)),
-					lineno + 1
+					(if h.h_interactive then h.h_line ^ buffer else buffer),
+					(if h.h_interactive then h.h_pos else h.h_pos + (String.length h.h_line)),
+					h.h_lineno + 1
 				) in
 		(*let _ = print_endline ("-->" ^ linep) in*)
 		let bufl = String.length bufferp in
@@ -376,7 +410,10 @@ let get_buffer (h : handle ref) (dst : string) (len : int) : int =
 			else String.sub bufferp lenp (bufl - lenp) in
 		begin
 			String.blit bufferp 0 dst 0 lenp;
-			h := (inter, chan, linep, buffers, posp, linenop, out, name);
+			h.h_line <- linep;
+			h.h_buffer <- buffers;
+			h.h_pos <- posp;
+			h.h_lineno <- linenop;
 			lenp
 		end
 	with End_of_file -> 0

@@ -429,6 +429,7 @@ and get_operator exp =
 	| MEMBEROF _ -> ("", 15)
 	| MEMBEROFPTR _ -> ("", 15)
 	| GNU_BODY _ -> ("", 17)
+	| EXPR_LINE (expr, _, _) -> get_operator expr
 
 and print_comma_exps exps =
 	print_commas false (fun exp -> print_expression exp 1) exps
@@ -501,7 +502,9 @@ and print_expression (exp : expression) (lvl : int) =
 		| GNU_BODY (decs, stat) ->
 			print "(";
 			print_statement (BLOCK (decs, stat));
-			print ")" in
+			print ")"
+		| EXPR_LINE (expr, _, _) ->
+			print_expression expr lvl in
 	if lvl > lvl' then print ")" else ()
 
 and print_constant cst =
@@ -631,6 +634,8 @@ and print_statement stat =
 			print_commas false print mods
 		end;
 		print ");"
+	| STAT_LINE (stat, _, _) ->
+		print_statement stat
 
 and print_gnu_asm_arg (id, desc, exp) =
 	if id <> "" then print ("[" ^ id ^ "]");
