@@ -161,6 +161,8 @@ and statement =
 		(** Classical "asm" support. *)
 	| GNU_ASM of string * gnu_asm_arg list * gnu_asm_arg list * string list
 		(** GNU "asm" support. *)
+	| STAT_LINE of statement * string * int
+		(** Information the filename and the line number of the contained statement. *)
 
 and gnu_asm_arg =  string * string * expression
 
@@ -242,6 +244,8 @@ and expression =
 		(** Pointer indirection through "->". *)
 	| GNU_BODY of body
 		(** GNU braces inside an expression. *)
+	| EXPR_LINE of expression * string * int
+		(** Record the file and line of the expression. *)
 
 (** Constant values. *)
 and constant =
