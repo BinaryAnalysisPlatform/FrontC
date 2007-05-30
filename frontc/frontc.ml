@@ -59,6 +59,8 @@ type parsing_arg =
 	| OPTION of string				(** Pass the given option directl to the CPP. *)
 	| ERROR of out_channel			(** Use the given channel for outputting errors. *)
 	| INTERACTIVE of bool			(** Is this session interactive (from console). *)
+	| GCC_SUPPORT of bool			(** Support some extensions of the GCC compiler (default to true). *)
+	| LINE_RECORD of bool			(** Record line numbers in the C abstract trees (default to false). *)
 
 
 (**
@@ -158,6 +160,8 @@ let parse args =
 	let cpp_use = ref false in
 	let file = ref "" in
 	let interactive = ref false in
+	let gcc = ref true in
+	let linerec = ref false in
 	
 	(* Scan the arguments *)
 	let rec scan args =
@@ -186,7 +190,11 @@ let parse args =
 		| (ERROR chan) :: tl ->
 			error := chan; scan tl
 		| (INTERACTIVE inter) :: tl ->
-			interactive := inter; scan tl in
+			interactive := inter; scan tl
+		| (GCC_SUPPORT v) :: tl ->
+			gcc := v; scan tl
+		| (LINE_RECORD v) :: tl ->
+			linerec := v; scan tl in
 	let _ = scan args in
 	
 	(* Build the input *)
@@ -201,7 +209,18 @@ let parse args =
 	(* Perform the  parse *)
 	let result =
 		try 
-			Clexer.init (!interactive, real_input, "", "", 0, 0, !error, !file);
+			Clexer.init {
+				Clexer.h_interactive = !interactive;
+				Clexer.h_in_channel = real_input;
+				Clexer.h_line = "";
+				Clexer.h_buffer = "";
+				Clexer.h_pos = 0;
+				Clexer.h_lineno = 0;
+				Clexer.h_out_channel = !error;
+				Clexer.h_file_name = !file;
+				Clexer.h_gcc = !gcc;
+				Clexer.h_linerec = !linerec;
+			};
 			PARSING_OK (Cparser.file
 				Clexer.initial
 				(Lexing.from_function (Clexer.get_buffer Clexer.current_handle)))

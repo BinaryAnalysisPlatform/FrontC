@@ -26,6 +26,8 @@ let opts = [
 		"Output to the given file.");
 	("-pp", Arg.Unit (fun _ -> args := USE_CPP :: !args),
 		"Preprocess the input files.");
+	("-nogcc", Arg.Unit (fun _ -> args := (GCC_SUPPORT false) :: !args),
+		"Do not use the GCC extensions.");
 	("-proc", Arg.String (fun cpp -> args := (PREPROC cpp) :: !args),
 		"Use the given preprocessor");
 	("-i", Arg.String (fun file -> args := (INCLUDE file) :: !args),
