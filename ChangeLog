@@ -1,3 +1,7 @@
+2007-05-30 casse	<casse@irit.fr>
+Added support for line recording (option LINE_RECORD) and GCC extension
+support desactivation (option GCC_SUPPORT).
+
 2006-05-04 casse	<casse@irit.fr>
 Fixed bu in byte-code executable compilation preventing the CMO to be linked.
 Fixed INSTALL file.
