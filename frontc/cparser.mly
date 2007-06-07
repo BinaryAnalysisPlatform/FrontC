@@ -38,6 +38,10 @@ let version = "Cparser V3.0b 10.9.99 Hugues Cassé"
 let parse_error _ =
 	Clexer.display_error "Syntax error" (Parsing.symbol_start ()) (Parsing.symbol_end ())
 
+(*let fatal _ =
+	Clexer.display_error "fatal error" (Parsing.symbol_start ()) (Parsing.symbol_end
+	())*)
+
 
 (*
 ** Type analysis
@@ -192,7 +196,7 @@ let set_eline (file, line) expr =
 %token <string * int> IF ELSE
 
 /* GNU attributes */
-%token ATTRIBUTE EXTENSION
+%token ATTRIBUTE EXTENSION INLINE
 
 /* operator precedence */
 %nonassoc 	IF
@@ -363,13 +367,19 @@ global_proto:
 			  PROTO _
 			| OLD_PROTO _ ->
 				(fst $1, snd $1, $2, NOTHING)
-			| _ -> assert false}
+			| _ -> begin (*fatal();*) assert false end}
 ;
 old_proto:
 		global_dec opt_gcc_attributes
 			{match (snd $1) with
 				  OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
-				| _ -> assert false}
+				(*| PROTO (typ, [], ell) -> fst $1, OLD_PROTO (typ, [], ell), $2, NOTHING*)
+				| _ -> begin
+					(*fatal();
+					Cprint.print_type (fun _ -> ()) (snd $1);
+					print_string ("[" ^ !Cprint.line ^ "]");*)
+					assert false
+				end }
 ;
 
 
@@ -520,6 +530,8 @@ typedef_type:
 			{apply_mods (snd $1) ((fst $1), NO_STORAGE)}
 |		CONST typedef_sub
 			{apply_mods (BASE_CONST::(snd $2)) ((fst $2), NO_STORAGE)}
+|		VOLATILE typedef_sub
+			{apply_mods (BASE_VOLATILE::(snd $2)) ((fst $2), NO_STORAGE)}
 ;
 typedef_sub:
 		NAMED_TYPE						{(NAMED_TYPE $1, [])}
@@ -579,12 +591,12 @@ field:
 		field_type field_defs SEMICOLON	{set_name_group $1 (List.rev $2)}
 ;
 field_type:
-		field_mod_list_opt field_qual 
-			{apply_mods (snd $2) (apply_mods $1 ((fst $2), NO_STORAGE))}
-|		field_mod_list_opt comp_type field_mod_list_opt
-			{apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))}
+	field_mod_list_opt field_qual 
+		{apply_mods (snd $2) (apply_mods $1 ((fst $2), NO_STORAGE))}
+|	field_mod_list_opt comp_type field_mod_list_opt
+		{apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))}
 |	field_mod_list_opt	NAMED_TYPE field_mod_list_opt
-			{apply_mods $3 (apply_mods $1 (NAMED_TYPE $2, NO_STORAGE))}
+		{apply_mods $3 (apply_mods $1 (NAMED_TYPE $2, NO_STORAGE))}
 ;
 field_mod_list_opt:
 		/* empty */						{[]}
@@ -612,7 +624,9 @@ field_def:
 		field_dec						{(fst $1, snd $1, [], NOTHING)}
 ;
 field_dec:
-		IDENT
+		/* emtpy */
+			{("", NO_TYPE)}
+|		IDENT
 			{($1, NO_TYPE)}
 |		NAMED_TYPE
 			{($1, NO_TYPE)}
@@ -1090,6 +1104,8 @@ gcc_attribute:
 		{ $1 }*/
 |	EXTENSION
 		{ [GNU_EXTENSION] }
+|	INLINE
+		{ [GNU_INLINE] }
 ;
 
 opt_gnu_args:
