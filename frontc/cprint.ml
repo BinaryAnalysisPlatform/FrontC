@@ -254,7 +254,7 @@ and print_pointer typ =
 	| CONST typ -> print_pointer typ; print " const "
 	| VOLATILE typ -> print_pointer typ; print " volatile "
 	| ARRAY (typ, _) -> print_pointer typ
-	| _ -> ()
+	| _ -> print_base_type typ
 
 and print_array typ =
 	match typ with
@@ -265,6 +265,10 @@ and print_array typ =
 		print "]"
 	| _ -> ()
 
+(**	Print a type.
+	@param fct	Function called to display the name of the.
+	@param typ	Type to display.
+*)
 and print_type (fct : unit -> unit) (typ : base_type ) =
 	let base = get_base_type typ in
 	match base with
@@ -695,6 +699,8 @@ and print_attribute attr =
 		print_constant cst
 	| GNU_EXTENSION ->
 		print "__extension__"
+	| GNU_INLINE ->
+		print "__inline__"
 
 
 (*

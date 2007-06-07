@@ -306,6 +306,8 @@ and convert_gnu_attr attr =
 		-> convert_const cst
 	| GNU_EXTENSION
 		-> Cxml.new_elt "extension" [] []
+	| GNU_INLINE
+		-> Cxml.new_elt "inline" [] []
 	| GNU_CALL (id, attrs)
 		-> Cxml.new_elt "call" [("id", id)] (List.map convert_gnu_attr attrs)
 
