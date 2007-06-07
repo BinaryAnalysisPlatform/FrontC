@@ -67,6 +67,54 @@ let file_name (h : handle) = h.h_file_name
 let linerec (h: handle) = h.h_linerec
 let curfile _ = (!current_handle).h_file_name
 let curline _ = (!current_handle).h_lineno
+let has_gcc _ = (!current_handle).h_gcc
+
+
+(*
+ * Error handling
+ *)
+let underline_error (buffer : string) (start : int) (stop : int) =
+	let len = String.length buffer in
+	let start' = max 0 start in
+	let stop' = max 1 stop in
+	(
+		(if start' > 0 then (String.sub buffer 0 start') else "")
+		^ "\027[4m"
+		^ (if (stop' - start') <> 0
+			then (String.sub buffer start' (stop' - start' ) )
+			else ""
+		)
+		^ "\027[0m"
+		^ (if stop' < len then (String.sub buffer stop' (len - stop') ) else "")
+	)
+
+let display_error msg token_start token_end =
+	output_string (out_channel !current_handle) (
+		(if (interactive !current_handle)
+			then ""
+			else 
+				(file_name !current_handle) ^ "["
+				^ (string_of_int (lineno !current_handle)) ^ "] "
+		)
+		^ msg ^ ": "
+		^ (underline_error
+				(line !current_handle)
+				(real_pos token_start !current_handle)
+				(real_pos token_end !current_handle)
+		)
+	);
+	flush (out_channel !current_handle)
+
+let display_semantic_error msg =
+	display_error msg (pos !current_handle) (pos !current_handle)
+
+
+let error msg =
+	display_error msg (Parsing.symbol_start ()) (Parsing.symbol_end ());
+	raise Parsing.Parse_error
+
+let test_gcc _ = if not (!current_handle).h_gcc then  error "forbidden GCC syntax"
+
 
 (*
 ** Keyword hashtable
@@ -81,10 +129,7 @@ struct
 end
 module StringHashtbl = Hashtbl.Make(HashString)
 let lexicon = StringHashtbl.create 211
-let init_lexicon _ =
-	StringHashtbl.clear lexicon;
-	List.iter
-	(fun (key, token) -> StringHashtbl.add lexicon key token)
+let keywords =
 	[
 		("auto", id AUTO);
 		("const", id CONST); ("__const", id CONST);
@@ -120,11 +165,20 @@ let init_lexicon _ =
 		("if", fun _ -> IF (curfile(), curline()));
 		("else", fun _ -> ELSE (curfile(), curline()));
 		("asm", id ASM);
-		
-		(*** Specific GNU ***)
+	]
+
+(*** Specific GNU ***)
+let gnu_keywords : (string * (unit -> Cparser.token)) list = [
 		("__attribute__", id ATTRIBUTE);
-		("__extension__", id EXTENSION)
-]
+		("__extension__", id EXTENSION);
+		("__inline", id INLINE)
+	]
+
+let init_lexicon _ =
+	let add (key, token) = StringHashtbl.add lexicon key token in
+	StringHashtbl.clear lexicon;
+	List.iter add keywords;
+	if has_gcc ()  then List.iter add gnu_keywords
 
 let add_type name =
 	StringHashtbl.add lexicon name (id (NAMED_TYPE name))
@@ -165,51 +219,6 @@ let set_line num =
 
 let set_name name =
 	(!current_handle).h_file_name <- name
-
-
-(*** syntax error building ***)
-let underline_error (buffer : string) (start : int) (stop : int) =
-	let len = String.length buffer in
-	let start' = max 0 start in
-	let stop' = max 1 stop in
-	(
-		(if start' > 0 then (String.sub buffer 0 start') else "")
-		^ "\027[4m"
-		^ (if (stop' - start') <> 0
-			then (String.sub buffer start' (stop' - start' ) )
-			else ""
-		)
-		^ "\027[0m"
-		^ (if stop' < len then (String.sub buffer stop' (len - stop') ) else "")
-	)
-
-let display_error msg token_start token_end =
-	output_string (out_channel !current_handle) (
-		(if (interactive !current_handle)
-			then ""
-			else 
-				(file_name !current_handle) ^ "["
-				^ (string_of_int (lineno !current_handle)) ^ "] "
-		)
-		^ msg ^ ": "
-		^ (underline_error
-				(line !current_handle)
-				(real_pos token_start !current_handle)
-				(real_pos token_end !current_handle)
-		)
-	);
-	flush (out_channel !current_handle)
-
-let display_semantic_error msg =
-	display_error msg (pos !current_handle) (pos !current_handle)
-
-
-(*** Error handling ***)
-let error msg =
-	display_error msg (Parsing.symbol_start ()) (Parsing.symbol_end ());
-	raise Parsing.Parse_error
-
-let test_gcc _ = if not (!current_handle).h_gcc then  error "forbidden GCC syntax"
 
 
 (*** escape character management ***)
