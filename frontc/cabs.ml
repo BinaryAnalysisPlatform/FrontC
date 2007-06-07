@@ -276,6 +276,8 @@ and gnu_attr =
 		(** Constant value. *)
 	| GNU_EXTENSION
 		(** Support of __extension__ keyword *)
+	| GNU_INLINE
+		(** Support of __inline keyword *)
 
 
 
