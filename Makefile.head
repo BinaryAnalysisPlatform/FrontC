@@ -21,6 +21,11 @@ SUBDIRS =
 export PREFIX=/usr
 export BIN_DIR = $(PREFIX)/bin
 export LIB_DIR = $(PREFIX)/lib
+export DATA_DIR = $(PREFIX)/share/$(PROJECT)
+
+# User hooks
+INSTALL_BEFORE=
+INSTALL_AFTER=
 
 # OCAML Predefinitions
 OCAMLC = ocamlc

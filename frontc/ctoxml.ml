@@ -296,6 +296,11 @@ and convert_type _type =
 	| GNU_TYPE (attrs, _type) ->
 		Cxml.add_children (convert_type _type) (List.map convert_gnu_attr attrs)
 
+	| TYPE_LINE (file, line, t) ->
+		Cxml.new_elt "type_line"
+			[ ("file", file); ("line", string_of_int line) ]
+			[convert_type _type]
+
 and convert_gnu_attr attr =
 	match attr with
 	  GNU_NONE

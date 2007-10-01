@@ -70,6 +70,7 @@ let apply_mod (typ, sto) modi =
 		| (CONST typ, _) -> CONST (mod_root typ)
 		| (VOLATILE typ, _) -> VOLATILE (mod_root typ)
 		| (GNU_TYPE (attrs, typ), _) -> GNU_TYPE (attrs, mod_root typ)
+		| (TYPE_LINE (f, l, t), _) -> TYPE_LINE (f, l, mod_root t)
 		| _ -> raise BadModifier in
 	let check_access typ =
 		match typ with
@@ -104,6 +105,7 @@ let set_type tst tin =
 		| OLD_PROTO (typ, pars, ell) -> OLD_PROTO (set typ, pars, ell)
 		| CONST typ -> CONST (set typ)
 		| VOLATILE typ -> VOLATILE (set typ)
+		| TYPE_LINE (f, l, t) -> TYPE_LINE (f, l, set t)
 		| BITFIELD (NO_SIGN, exp) ->
 			(match tst with
 				INT (_, sign) -> BITFIELD (sign, exp)
@@ -157,6 +159,11 @@ let set_eline (file, line) expr =
 	if Clexer.linerec !Clexer.current_handle
 	then Cabs.EXPR_LINE (expr, file, line)
 	else expr
+
+let set_tline _type =
+	if Clexer.linerec !Clexer.current_handle
+	then Cabs.TYPE_LINE (Clexer.curfile (), Clexer.curline(), _type)
+	else _type
 
 %}
 
@@ -335,7 +342,7 @@ global_def:
 ;
 global_dec:
 		IDENT 
-			{($1, NO_TYPE)}	
+			{($1, set_tline NO_TYPE)}	
 |		LPAREN global_dec RPAREN
 			{$2}
 |		STAR global_dec

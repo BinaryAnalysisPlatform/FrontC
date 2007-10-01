@@ -196,6 +196,7 @@ let rec print_base_type typ =
 	| CONST typ -> print_base_type typ
 	| VOLATILE typ -> print_base_type typ
 	| GNU_TYPE (attrs, typ) ->  print_attributes attrs; print_base_type typ
+	| TYPE_LINE (_, _, _type) -> print_base_type _type
 	
 and print_fields id (flds : name_group list) =
 	print id;
@@ -254,7 +255,7 @@ and print_pointer typ =
 	| CONST typ -> print_pointer typ; print " const "
 	| VOLATILE typ -> print_pointer typ; print " volatile "
 	| ARRAY (typ, _) -> print_pointer typ
-	| _ -> print_base_type typ
+	| _ -> (*print_base_type typ*) ()
 
 and print_array typ =
 	match typ with

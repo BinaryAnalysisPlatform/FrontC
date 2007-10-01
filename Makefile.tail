@@ -1,3 +1,4 @@
+
 # Development rules
 _all: _subdirs_all $(_ALL)
 
@@ -56,7 +57,7 @@ endif
 
 
 # Install rules
-install: all _subdirs_install $(_INSTALL)
+install: all $(INSTALL_BEFORE) _subdirs_install $(_INSTALL) $(INSTALL_AFTER)
 
 _subdirs_install:
 ifdef SUBDIRS
@@ -69,7 +70,10 @@ endif
 
 $(BIN_DIR):
 	install -d $(BIN_DIR)
-	
+
+$(DATA_DIR):
+	install -d $(DATA_DIR)
+
 
 # OCAML Rules
 OCAMLC_CFLAGS += $(patsubst %,-I %,$(OCAMLC_INC) $(OCAML_INC))

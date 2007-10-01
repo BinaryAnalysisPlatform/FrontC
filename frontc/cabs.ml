@@ -77,6 +77,8 @@ and base_type =
 	| VOLATILE of base_type
 		(** "volatile" modifier *)
 	| GNU_TYPE of gnu_attrs * base_type
+		(** Not a type, just to record the file/line of an identifier. *)
+	| TYPE_LINE of string * int * base_type
 
 (** A name in a declaration with identifier, full type, GNU attributes and
  *	initialization expression. *)
