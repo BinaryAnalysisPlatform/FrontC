@@ -1,3 +1,7 @@
+2007-10-23 casse	<casse@irit.fr>
+[VERSION 3.4]
+Calipso project included in FrontC.
+
 2007-05-30 casse	<casse@irit.fr>
 Added support for line recording (option LINE_RECORD) and GCC extension
 support desactivation (option GCC_SUPPORT).
