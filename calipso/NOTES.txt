@@ -1,0 +1,30 @@
+IMPROVEMENT
+
+The form below:
+	if(c) {
+		S1;
+		if(c') goto l;
+		S2;
+	}
+	else {
+		S1';
+		l:
+		S2';
+	}
+would be better tranformed to:
+	_t1 = c;
+	if(_t1) {
+		S1;
+		_t2 = c';
+		if(!_t1)
+			S2;
+	}
+	if(!_t1 || _t2) {
+		_t1 = 0;
+		if(!_t2)
+			S1';
+		_t2 = 0;
+		S2';
+	}
+
+To do soon.
