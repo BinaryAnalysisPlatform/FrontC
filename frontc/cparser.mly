@@ -542,18 +542,22 @@ typedef_type:
 ;
 typedef_sub:
 		NAMED_TYPE						{(NAMED_TYPE $1, [])}
-|		NAMED_TYPE CONST				{(NAMED_TYPE $1, [BASE_CONST])}
 |		comp_type						{($1, [])}		
-|		comp_type CONST					{($1, [BASE_CONST])}
 |		typedef_qual					{$1}
 		/* !!TODO!! Unknown named type support: add option for it */
 |		IDENT							{ Clexer.add_type $1; (NAMED_TYPE $1, [])}
+|		NAMED_TYPE CONST				{(NAMED_TYPE $1, [BASE_CONST])}
+|		NAMED_TYPE VOLATILE				{(NAMED_TYPE $1, [BASE_VOLATILE])}
+|		comp_type CONST					{($1, [BASE_CONST])}
+|		comp_type VOLATILE				{($1, [BASE_VOLATILE])}
 |		IDENT CONST						{ Clexer.add_type $1; (NAMED_TYPE $1, [BASE_CONST])}
+|		IDENT VOLATILE					{ Clexer.add_type $1; (NAMED_TYPE $1, [BASE_VOLATILE])}
 ;
 typedef_qual:
 		qual_type						{$1}
 |		typedef_qual qual_type			{apply_qual $1 $2}
 |		typedef_qual CONST				{(fst $1, BASE_CONST::(snd $1))}
+|		typedef_qual VOLATILE			{(fst $1, BASE_VOLATILE::(snd $1))}
 ;
 typedef_defs:
 		typedef_def						{[$1]}

@@ -10,6 +10,7 @@ SOURCES = \
 	cparser.mly \
 	ctoxml.ml \
 	frontc.ml
+OCAMLYACC_FLAGS = -v
 
 $(eval $(call ocaml_lib,frontc,$(SOURCES)))
 
