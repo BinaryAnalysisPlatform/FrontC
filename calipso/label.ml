@@ -14,7 +14,7 @@ module BitField =
 struct
 	type t = bool array
 	
-	let empty (sz : int) : t = Array.create sz false
+	let empty (sz : int) : t = Array.make sz false
 	
 	(*** accessors **)
 	let size (bf : t) : int = Array.length bf

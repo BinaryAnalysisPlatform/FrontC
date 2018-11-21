@@ -303,7 +303,7 @@ let apply_weights nd ins outs =
 		
 	let test_edges stats =
 		let lng = List.length stats in
-		let wghts = Array.create lng 0 in
+		let wghts = Array.make lng 0 in
 		begin
 			for i = 0 to (lng - 1) do
 				for j = 0 to (lng - 1) do
