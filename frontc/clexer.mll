@@ -396,7 +396,7 @@ and chr =
 {
 
 (*** get_buffer ***)
-let get_buffer (hr : handle ref) (dst : string) (len : int) : int =
+let get_buffer (hr : handle ref) (dst : bytes) (len : int) : int =
 	(*let (inter, chan, line, buffer, pos, lineno, out, name) = !hr in*)
 	let h = !hr in
 	try
