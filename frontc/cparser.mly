@@ -829,6 +829,8 @@ STRUCT type_name
     {ENUM ($2, [])}
   |		ENUM LBRACE enum_list RBRACE
     {ENUM ("", List.rev $3)}
+  |		ENUM LBRACE enum_list COMMA RBRACE
+    {ENUM ("", List.rev $3)}
   |		ENUM type_name LBRACE enum_list RBRACE
     {ENUM ($2, List.rev $4)}
 ;
