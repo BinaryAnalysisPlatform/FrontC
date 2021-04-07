@@ -287,7 +287,7 @@ global_type global_defs SEMICOLON
       | OLD_PROTO _ ->
 	 OLDFUNDEF (set_single $1 $2, [], (snd $3))
       | _ ->
-	 assert false
+	 raise Parsing.Parse_error
     }
   |		global_type old_proto old_pardefs body
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
@@ -374,19 +374,14 @@ global_dec opt_gcc_attributes
        PROTO _
      | OLD_PROTO _ ->
 	(fst $1, snd $1, $2, NOTHING)
-     | _ -> begin (*fatal();*) assert false end}
+     | _ -> raise Parsing.Parse_error }
 ;
 old_proto:
 global_dec opt_gcc_attributes
     {match (snd $1) with
        OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
      (*| PROTO (typ, [], ell) -> fst $1, OLD_PROTO (typ, [], ell), $2, NOTHING*)
-     | _ -> begin
-	 (*fatal();
-	 Cprint.print_type (fun _ -> ()) (snd $1);
-	 print_string ("[" ^ !Cprint.line ^ "]");*)
-	 assert false
-       end }
+     | _ -> raise Parsing.Parse_error }
 ;
 
 
@@ -1151,7 +1146,7 @@ IDENT
     {
       match $1 with
 	[(Cabs.GNU_ID name)] -> name
-      | _ -> assert false
+      | _ -> raise Parsing.Parse_error
     }
 ;
 
