@@ -36,7 +36,8 @@
     let version = "Cparser V3.0b 10.9.99 Hugues Cassé"
 
     let parse_error _ =
-      Clexer.display_error "Syntax error" (Parsing.symbol_start ()) (Parsing.symbol_end ())
+      Clexer.display_error "Syntax error" (Parsing.symbol_start ()) (Parsing.symbol_end ());
+      raise Parsing.Parse_error
 
     (*let fatal _ =
     Clexer.display_error "fatal error" (Parsing.symbol_start ()) (Parsing.symbol_end
@@ -287,7 +288,7 @@ global_type global_defs SEMICOLON
       | OLD_PROTO _ ->
 	 OLDFUNDEF (set_single $1 $2, [], (snd $3))
       | _ ->
-	 raise Parsing.Parse_error
+	 parse_error ()
     }
   |		global_type old_proto old_pardefs body
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
@@ -374,14 +375,14 @@ global_dec opt_gcc_attributes
        PROTO _
      | OLD_PROTO _ ->
 	(fst $1, snd $1, $2, NOTHING)
-     | _ -> raise Parsing.Parse_error }
+     | _ -> parse_error () }
 ;
 old_proto:
 global_dec opt_gcc_attributes
     {match (snd $1) with
        OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
      (*| PROTO (typ, [], ell) -> fst $1, OLD_PROTO (typ, [], ell), $2, NOTHING*)
-     | _ -> raise Parsing.Parse_error }
+     | _ -> parse_error () }
 ;
 
 
@@ -1146,7 +1147,7 @@ IDENT
     {
       match $1 with
 	[(Cabs.GNU_ID name)] -> name
-      | _ -> raise Parsing.Parse_error
+      | _ -> parse_error ()
     }
 ;
 
