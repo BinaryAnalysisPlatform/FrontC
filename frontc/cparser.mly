@@ -299,7 +299,7 @@ global_type global_defs SEMICOLON
       | OLD_PROTO _ ->
 	 OLDFUNDEF (set_single $1 $2, [], ([], $3))
       | _ ->
-	 raise Parsing.Parse_error
+	 parse_error ()
     }
   |		global_type old_proto old_pardefs body
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
