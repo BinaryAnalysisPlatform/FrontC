@@ -62,7 +62,7 @@ endef
 # Library compilation
 define ocaml_byte_code_lib
 
-_ALL += $(1).cma 
+_ALL += $(1).cma
 $(1)_MLO = $(call ocaml_sources,$(2))
 $(1)_CMO = $$(patsubst %.ml,%.cmo,$$($(1)_MLO))
 $(1)_MLLO = $$(filter %.mll,$(2))
@@ -84,14 +84,14 @@ $(1).cma: $$($(1)_CMO)
 	$$(OCAMLC) -a $$($(1)_LDFLAGS) $$(OCAMLC_LDFLAGS) -o $$@ $$($(1)_CMO) $$(OCAMLC_LIBS)
 
 _install_$(1)_CMA:
-	install -d $(OCAML_SITE)/$(1)
-	install $(1).cma $$($(1)_CMIO) $(OCAML_SITE)/$(1)
-	
+	install -d $(OCAML_SITE)/FrontC
+	install $(1).cma $$($(1)_CMIO) $(OCAML_SITE)/FrontC
+
 endef
 
 define ocaml_native_lib
 
-_ALL += $(1).cmxa 
+_ALL += $(1).cmxa $(1).cmxs
 $(1)_MLX = $(call ocaml_sources,$(2))
 $(1)_CMX = $$(patsubst %.ml,%.cmx,$$($(1)_MLX))
 $(1)_MLLX = $$(filter %.mll,$(2))
@@ -107,16 +107,23 @@ _CLEAN += $$($(1)_CMX) \
 	$$(patsubst %.mly,%.ml,$$($(1)_MLYX)) \
 	$$(patsubst %.mly,%.mli,$$($(1)_MLYX))
 _DIST += $(2)
-_BINARY_DIST += $(1).cmxa $(1).a $(patsubst %.cmx,%.cmi,$$($(1)_CMX))
-_INSTALL += _install_$(1)_CMXA
+_BINARY_DIST += $(1).cmxa $(1).cmxs $(1).a $(patsubst %.cmx,%.cmi,$$($(1)_CMX))
+_INSTALL += _install_$(1)_CMXA _install_$(1)_CMXS
 
 $(1).cmxa: $$($(1)_CMX)
 	$$(OCAMLOPT) -a $$($(1)_LDFLAGS) $$(OCAMLOPT_LDFLAGS) -o $$@ $$($(1)_CMX) $$(OCAMLOPT_LIBS)
 
+$(1).cmxs: $$($(1).cmxa)
+	$$(OCAMLOPT) -shared -linkall $$($(1).cmxa) -o $$@
+
 _install_$(1)_CMXA:
-	install -d $(OCAML_SITE)/$(1)
-	install $(1).cmxa $(1).a $$($(1)_CMIX) $(OCAML_SITE)/$(1)
-	
+	install -d $(OCAML_SITE)/FrontC
+	install $(1).cmxa $(1).a $$($(1)_CMIX) $(OCAML_SITE)/FrontC
+
+_install_$(1)_CMXS:
+	install -d $(OCAML_SITE)/FrontC
+	install $(1).cmxs $(OCAML_SITE)/FrontC
+
 endef
 
 define ocaml_lib

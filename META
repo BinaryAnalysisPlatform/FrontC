@@ -1,0 +1,7 @@
+description = "Parser for the C language"
+version = "3.4.3"
+requires = "unix"
+archive(byte) = "frontc.cma"
+archive(native) = "frontc.cmxa"
+plugin(byte) = "frontc.cma"
+plugin(native) = "frontc.cmxs"
