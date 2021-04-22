@@ -164,7 +164,7 @@ let keywords =
 		("for", fun _ -> FOR (curfile(), curline()));
 		("if", fun _ -> IF (curfile(), curline()));
 		("else", fun _ -> ELSE (curfile(), curline()));
-		("asm", id ASM);
+		("asm", id ASM); ("__asm__", id ASM);
 	]
 
 (*** Specific GNU ***)

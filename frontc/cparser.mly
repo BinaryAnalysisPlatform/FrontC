@@ -290,6 +290,17 @@ global_type global_defs SEMICOLON
       | _ ->
 	 parse_error ()
     }
+  | 	global_type global_proto basic_asm SEMICOLON
+    {
+      let (_, base, _, _) = $2 in
+      match base with
+	PROTO _ ->
+	 FUNDEF (set_single $1 $2, ([], $3))
+      | OLD_PROTO _ ->
+	 OLDFUNDEF (set_single $1 $2, [], ([], $3))
+      | _ ->
+	 parse_error ()
+    }
   |		global_type old_proto old_pardefs body
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
   |		global_type SEMICOLON
@@ -1057,6 +1068,14 @@ SEMICOLON opt_expression RPAREN statement
     { Clexer.test_gcc(); GNU_ASM ($3, List.rev $4, List.rev $5, List.rev $6) }
 ;
 
+/* "Basic asm" https://gcc.gnu.org/onlinedocs/gcc/Basic-Asm.html#Basic-Asm */
+basic_asm:
+ASM opt_gcc_attributes LPAREN string_list RPAREN
+  { ASM $4 }
+| ASM VOLATILE opt_gcc_attributes LPAREN string_list RPAREN
+  { ASM $5 }
+| ASM opt_gcc_attributes VOLATILE LPAREN string_list RPAREN
+  { ASM $5 }
 
 /*** GNU asm ***/
 gnu_asm_io:
