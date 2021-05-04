@@ -12,6 +12,7 @@ homepage: "https://github.com/BinaryAnalysisPlatform/FrontC"
 bug-reports: "https://github.com/BinaryAnalysisPlatform/FrontC/issues"
 depends: [
   "dune" {>= "2.7" & >= "2.7" & build}
+  "menhir"
   "odoc" {with-doc}
 ]
 build: [
