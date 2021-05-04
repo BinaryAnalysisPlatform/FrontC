@@ -1,0 +1,4 @@
+(executable
+  (name calipso)
+  (public_name calipso)
+  (libraries FrontC))

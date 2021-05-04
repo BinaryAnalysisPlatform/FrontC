@@ -1,0 +1,3 @@
+(executable
+  (name printc_bin)
+  (libraries FrontC))

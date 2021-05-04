@@ -20,3 +20,4 @@ calipso/calipso_stat
 ctoxml/ctoxml
 printc/printc
 *.cmxs
+\.merlin

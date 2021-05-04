@@ -1,12 +1,4 @@
-(* stat -- compute statistics about goto and labels.
-**
-** Project: 		Calipso
-** File: 			calipso.ml
-** Version:			1.0
-** Date:			9.22.99
-** Author:			Hugues Cassé
-**
-*)
+(* stat -- compute statistics about goto and labels.*)
 
 open Cabs
 exception ParsingError
@@ -26,7 +18,7 @@ let goto_cnt = ref 0
 let label_one = ref false
 let label_cnt = ref 0
 
-let rec build_stat stat = 
+let rec build_stat stat =
 	match stat with
 	BLOCK (_, sstat) -> build_stat sstat
 	| SEQUENCE (stat1, stat2) -> build_stat stat1; build_stat stat2
@@ -68,11 +60,11 @@ let display_stats _ =
 		(string_of_int (!label_total / !label_funcs))) ^ "\n");
 	print_string ("label maximum = " ^ (string_of_int !label_max) ^ "\n");
 	print_string ("label functions = " ^ (string_of_int !label_funcs) ^ "\n")
-	
+
 
 
 (* Useful Data *)
-let version = "stat V1.0 = 9.22.99 Hugues Cassé"
+let version = "stat V4.0 Hugues Cassé et al."
 let help = version ^ "\n" ^ "stat [-hPtVv] [-r[bcfgkrs]] [-p preprocessor] <file list>"
 exception InternalError
 
@@ -133,13 +125,13 @@ let preprocess inname outname =
 			^ (if (idx + 2) >= (String.length str)
 				then ""
 				else replace
-					(String.sub str (idx + 2) ((String.length str) - idx - 2))) 
+					(String.sub str (idx + 2) ((String.length str) - idx - 2)))
 		with Not_found -> str in
 	let com = replace !preproc in
 	let _ = if !verbose_mode
 		then prerr_string ("Executing \"" ^ com ^ "\"\n")
 		else () in
-	if (Sys.command com) = 0 
+	if (Sys.command com) = 0
 		then ()
 		else raise PreprocessingError
 
@@ -189,7 +181,7 @@ let process filename =
 	Frontc.PARSING_ERROR -> ()
 	| Frontc.PARSING_OK defs ->
 			process_defs defs
-	
+
 let rec process_files files =
 	match files with
 	[] -> ()

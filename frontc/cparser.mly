@@ -1,48 +1,11 @@
-/* NOTE: in the symbol table, local definition must replace type definition
-**		in order to correctly parse local variable in functions body.
-**		This is the only way to correctly handle this kind of exception,
-**		that is,
-**
-**		typedef ... ID;
-**		int f(int *p) {int ID; return (ID) * *p;}
-**		If ID isn't overload, last expression is parsed as a type cast,
-**		if it isn't, this a multiplication.
-**
-** IMPLEMENT:
-**		(1) Old-parameter passing style with an exception: the first old-style
-**		parameter name can't be a type name.
-**		(2) GNU __attribute__ modifier, GNU ({ }) statement in expression form.
-**
-** HISTORY
-**	1.0	2.19.99	Hugues Cassé	First version.
-**	2.0	3.22.99	Hugues Cassé	Large simplification about declarations.
-**								"register" parameters added, function pointers,
-**								GCC attributes, typedef full supported.
-**	2.1	4.23.99	Hugues Cassé	GNU Statement embedded statements managed.
-**		a	&x == y was analyzed as ADDROF(EQ(x, y)) corrected into the
-**			right form EQ(ADDROF(x), y)
-**		b	typedef struct ID ... ID; is now accepted.
-**		c	{v1, v2, v3, } now accepted.
-**		d	Spaced string components now accepted. Example: "Hel" "lo !".
-**	3.0	6.1.99	Hugues Cassé	Solve fully the problem of local/field/parameter
-**								with the same identifier to a typedef.
-**	a							const and volatile accepted for basic types
-**								for fields and only-types.
-**	b	10.9.99	Hugues Cassé	Correct priorities of type algebra:
-**								()() > * > []. Add typalg.c for testing it.
-*/
 %{
     open Cabs
-    let version = "Cparser V3.0b 10.9.99 Hugues Cassé"
 
-    let parse_error _ =
-      Clexer.display_error "Syntax error" (Parsing.symbol_start ()) (Parsing.symbol_end ());
-      raise Parsing.Parse_error
+    exception Error
 
-    (*let fatal _ =
-    Clexer.display_error "fatal error" (Parsing.symbol_start ()) (Parsing.symbol_end
-    ())*)
-
+    let parse_error startpos endpos =
+      Clexer.display_error "Syntax error" startpos endpos;
+      raise Error
 
     (*
      ** Type analysis
@@ -141,10 +104,8 @@
     let set_single (typ, sto) name : single_name =
       (typ, sto, set_name typ name)
 
-    let set_data (id, typ, attr, _) ini = (id, typ, attr, ini)
-
     let apply_qual ((t1, q1) : base_type * modifier list)
-		   ((t2, q2) : base_type * modifier list)
+	  ((t2, q2) : base_type * modifier list)
 	: base_type * modifier list =
       ((if t1 = NO_TYPE then t2 else
 	  if t2 = NO_TYPE then t1 else  raise BadModifier),
@@ -166,51 +127,13 @@
       then Cabs.TYPE_LINE (Clexer.curfile (), Clexer.curline(), _type)
       else _type
 
-           %}
+%}
 
-%token <string> IDENT
-%token <string> CST_CHAR
-%token <string> CST_INT
-%token <string> CST_FLOAT
-%token <string> CST_STRING
-%token <string> NAMED_TYPE
-%token <Cabs.gnu_attrs> GNU_ATTRS
-
-%token EOF
-%token CHAR INT DOUBLE FLOAT VOID
-%token ENUM STRUCT TYPEDEF UNION
-%token SIGNED UNSIGNED LONG SHORT
-%token VOLATILE EXTERN STATIC CONST AUTO REGISTER RESTRICT
-
-%token SIZEOF ASM
-
-%token <string * int> EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
-%token <string * int> AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
-%token ARROW DOT
-
-%token EQ_EQ EXCLAM_EQ INF SUP INF_EQ SUP_EQ
-%token PLUS MINUS STAR SLASH PERCENT
-%token TILDE AND PIPE CIRC
-%token EXCLAM AND_AND PIPE_PIPE
-%token INF_INF SUP_SUP
-%token PLUS_PLUS MINUS_MINUS
-
-%token <string * int> RPAREN LPAREN RBRACE LBRACE LBRACKET RBRACKET
-%token <string * int> COLON SEMICOLON COMMA ELLIPSIS QUEST
-
-%token <string * int> BREAK CONTINUE GOTO RETURN
-%token <string * int> SWITCH CASE DEFAULT
-%token <string * int> WHILE DO FOR
-%token <string * int> IF ELSE
-
-/* GNU attributes */
-%token ATTRIBUTE EXTENSION INLINE
 
 /* operator precedence */
 %nonassoc 	IF
 %nonassoc 	ELSE
 
-%left	COMMA
 %right	EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
 AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %right	QUEST COLON
@@ -223,10 +146,10 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %left	INF SUP INF_EQ SUP_EQ
 %left	INF_INF SUP_SUP
 %left	PLUS MINUS
-%left	STAR SLASH PERCENT CONST VOLATILE ATTRIBUTE GNU_ATTRS RESTRICT
+%left	STAR SLASH PERCENT CONST VOLATILE RESTRICT
 %right	EXCLAM TILDE PLUS_PLUS MINUS_MINUS CAST RPAREN ADDROF
 %left 	LBRACKET
-%left	DOT ARROW LPAREN LBRACE SIZEOF
+%left	DOT ARROW LPAREN SIZEOF
 
 /* Non-terminals informations */
 %start interpret file
@@ -262,16 +185,14 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 
 %%
 
-interpret:
-file EOF						{$1}
-;
-file:
-/* empty */						{[]}
-  |		globals							{List.rev $1}
-;
+interpret: file EOF {$1};
+
+file: globals EOF {List.rev $1};
+
 globals:
-global							{[$1]}
-  |		globals global					{$2::$1}
+  | global						{[$1]}
+  | globals global					{$2::$1}
+  | error {parse_error $symbolstartofs $endofs}
 ;
 
 
@@ -288,7 +209,7 @@ global_type global_defs SEMICOLON
       | OLD_PROTO _ ->
 	 OLDFUNDEF (set_single $1 $2, [], (snd $3))
       | _ ->
-	 parse_error ()
+	 parse_error $symbolstartofs $endofs
     }
   | 	global_type global_proto basic_asm SEMICOLON
     {
@@ -299,7 +220,7 @@ global_type global_defs SEMICOLON
       | OLD_PROTO _ ->
 	 OLDFUNDEF (set_single $1 $2, [], ([], $3))
       | _ ->
-	 parse_error ()
+	 parse_error $symbolstartofs $endofs
     }
   |		global_type old_proto old_pardefs body
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
@@ -386,14 +307,14 @@ global_dec opt_gcc_attributes
        PROTO _
      | OLD_PROTO _ ->
 	(fst $1, snd $1, $2, NOTHING)
-     | _ -> parse_error () }
+     | _ -> parse_error $symbolstartofs $endofs }
 ;
 old_proto:
 global_dec opt_gcc_attributes
     {match (snd $1) with
        OLD_PROTO _ -> (fst $1, snd $1, $2, NOTHING)
      (*| PROTO (typ, [], ell) -> fst $1, OLD_PROTO (typ, [], ell), $2, NOTHING*)
-     | _ -> parse_error () }
+     | _ -> parse_error $symbolstartofs $endofs }
 ;
 
 
@@ -1166,7 +1087,7 @@ IDENT
     {
       match $1 with
 	[(Cabs.GNU_ID name)] -> name
-      | _ -> parse_error ()
+      | _ -> parse_error $symbolstartofs $endofs
     }
 ;
 

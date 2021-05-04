@@ -1,28 +1,7 @@
-(* cprint -- pretty printer of C program from abstract syntax
-**
-** Project:	FrontC
-** File:	cprint.ml
-** Version:	2.1e
-** Date:	9.1.99
-** Author:	Hugues Cassé
-**
-**	1.0		2.22.99	Hugues Cassé	First version.
-**	2.0		3.18.99	Hugues Cassé	Compatible with Frontc 2.1, use of CAML
-**									pretty printer.
-**	2.1		3.22.99	Hugues Cassé	More efficient custom pretty printer used.
-**	2.1a	4.12.99	Hugues Cassé	Correctly handle:
-**									char *m, *m, *p; m + (n - p)
-**	2.1b	4.15.99	Hugues Cassé	x + (y + z) stays x + (y + z) for
-**									keeping computation order.
-**	2.1c	7.23.99	Hugues Cassé	Improvement of case and default display.
-**	2.1d	8.25.99	Hugues Cassé	Rebuild escape sequences in string and
-**									characters.
-**	2.1e	9.1.99	Hugues Cassé	Fix, recognize and correctly display '\0'.
-*)
+(* cprint -- pretty printer of C program from abstract syntax *)
 
 open Cabs
-let version = "Cprint 2.1e 9.1.99 Hugues Cassé"
-
+let version = "Cprint 4.0 Hugues Cassé et al."
 
 (*
 ** FrontC Pretty printer
@@ -86,7 +65,7 @@ let indent _ =
 		spaces := !tab;
 		roll := !roll + 1
 	end
-	
+
 let unindent _ =
 	new_line ();
 	spaces := !spaces - !tab;
@@ -94,7 +73,7 @@ let unindent _ =
 		spaces := ((!max_indent - 1) / !tab) * !tab;
 		roll := !roll - 1
 	end
-			
+
 let space _ = commit ()
 
 let print str =
@@ -106,7 +85,7 @@ let print str =
 		flush ();
 		output_char !out '\n';
 		if !follow = 0 then follow := !tab
-	end 
+	end
 
 
 (*
@@ -124,11 +103,11 @@ let print_commas nl fct lst =
 		false
 		lst in
 	()
-	
+
 
 let escape_string str =
 	let lng = String.length str in
-	let conv value = String.make 1 (Char.chr (value + 
+	let conv value = String.make 1 (Char.chr (value +
 			(if value < 10 then (Char.code '0') else (Char.code 'a' - 10)))) in
 	let rec build idx =
 		if idx >= lng then ""
@@ -150,16 +129,16 @@ let escape_string str =
 						^ (conv ((code mod 64) / 8))
 						^ (conv (code mod 8)) in
 			res ^ (build (idx + 1)) in
-	build 0	
+	build 0
 
 let rec has_extension attrs =
 	match attrs with
 	  [] -> false
 	| GNU_EXTENSION::_ -> true
-	| _::attrs -> has_extension attrs	
+	| _::attrs -> has_extension attrs
 
 
-(* 
+(*
 ** Base Type Printing
 *)
 let get_sign si =
@@ -197,7 +176,7 @@ let rec print_base_type typ =
 	| VOLATILE typ -> print_base_type typ
 	| GNU_TYPE (attrs, typ) ->  print_attributes attrs; print_base_type typ
 	| TYPE_LINE (_, _, _type) -> print_base_type _type
-	
+
 and print_fields id (flds : name_group list) =
 	print id;
 	if flds = []
@@ -235,7 +214,7 @@ and print_enum id items =
 
 
 (*
-** Declaration Printing 
+** Declaration Printing
 *)
 and get_base_type typ =
 	match typ with
@@ -245,11 +224,11 @@ and get_base_type typ =
 	| VOLATILE typ -> get_base_type typ
 	| ARRAY (typ, _) -> get_base_type typ
 	| _ -> typ
-	
+
 and print_pointer typ =
 	match typ with
 	  PTR typ -> print_pointer typ; print "*"
-	| RESTRICT_PTR typ -> 
+	| RESTRICT_PTR typ ->
 		print_pointer typ; print "* __restrict";
 		space ()
 	| CONST typ -> print_pointer typ; print " const "
@@ -260,7 +239,7 @@ and print_pointer typ =
 and print_array typ =
 	match typ with
 	ARRAY (typ, dim) ->
-		print_array typ; 
+		print_array typ;
 		print "[";
 		print_expression dim 0;
 		print "]"
@@ -374,7 +353,7 @@ and print_old_params pars ell =
 **		3	||
 **		2	? :
 **		1	= ?=
-**		0	,				
+**		0	,
 *)
 and get_operator exp =
 	match exp with
@@ -438,7 +417,7 @@ and get_operator exp =
 
 and print_comma_exps exps =
 	print_commas false (fun exp -> print_expression exp 1) exps
- 
+
 and print_expression (exp : expression) (lvl : int) =
 	let (txt, lvl') = get_operator exp in
 	let _ = if lvl > lvl' then print "(" else () in
@@ -630,7 +609,7 @@ and print_statement stat =
 		print ("asm(\"" ^ (escape_string desc) ^ "\");")
 	| GNU_ASM (desc, output, input, mods) ->
 		print ("asm(" ^ (escape_string desc) ^ "\"");
-		print " : ";		
+		print " : ";
 		print_commas false print_gnu_asm_arg output;
 		print " : ";
 		print_commas false print_gnu_asm_arg input;
@@ -721,12 +700,12 @@ and print_defs defs =
 
 and print_def def =
 	match def with
-	
+
 	FUNDEF (proto, body) ->
 		print_single_name proto;
 		let (decs, stat) = body in print_statement (BLOCK (decs, stat));
 		force_new_line ();
-		
+
 	| OLDFUNDEF (proto, decs, body) ->
 		print_single_name proto;
 		force_new_line ();
@@ -735,12 +714,12 @@ and print_def def =
 			decs;
 		let (decs, stat) = body in print_statement (BLOCK (decs, stat));
 		force_new_line ();
-		
+
 	| DECDEF names ->
 		print_name_group names;
 		print ";";
 		new_line ()
-			
+
 	| TYPEDEF (names, attrs) ->
 		if has_extension attrs then begin
 			print "__extension__";
@@ -757,7 +736,7 @@ and print_def def =
 		print ";";
 		new_line ();
 		force_new_line ()
-		
+
 
 (*  print abstrac_syntax -> ()
 **		Pretty printing the given abstract syntax program.
@@ -768,4 +747,3 @@ let print (result : out_channel) (defs : file) =
 
 let set_tab t = tab := t
 let set_width w = width := w
-

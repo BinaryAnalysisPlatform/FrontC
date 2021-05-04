@@ -1,0 +1,20 @@
+(ocamllex clexer)
+
+(menhir
+  (modules ctokens)
+  (flags --only-tokens))
+
+(menhir
+  (modules ctokens cparser)
+  (merge_into cparser)
+  (flags --external-tokens Ctokens))
+
+(library
+  (name FrontC)
+  (public_name FrontC)
+  (wrapped false)
+  (libraries unix))
+
+(deprecated_library_name
+  (old_public_name Frontc)
+  (new_public_name FrontC))

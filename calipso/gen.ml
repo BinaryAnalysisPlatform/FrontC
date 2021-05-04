@@ -1,13 +1,3 @@
-(* Calipso Project -- C abstract code manager
-**
-** 	Project: 		Calipso
-** 	File: 			gen.ml
-** 	Version:		1.0
-** 	Date:			7.7.99
-** 	Author:			Hugues Cassé
-**
-*)
-
 open Cabs
 
 
@@ -187,7 +177,7 @@ let rec sequentialize stats =
 	| [stat] -> stat
 	| stat::fol ->
 		sequence stat (sequentialize fol)
-	
+
 
 (* linearize statement -> statement_list
 **	Tranform a sequence statement into a statement list.

@@ -1,0 +1,4 @@
+(executable
+  (name ctoxml_bin)
+  (public_name ctoxml)
+  (libraries FrontC))
