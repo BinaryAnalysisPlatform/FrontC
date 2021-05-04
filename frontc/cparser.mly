@@ -185,9 +185,11 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 
 %%
 
-interpret: file EOF {$1};
+interpret: file {$1};
 
-file: globals EOF {List.rev $1};
+file:
+  | EOF   {[]}
+  | globals EOF {List.rev $1};
 
 globals:
   | global						{[$1]}
