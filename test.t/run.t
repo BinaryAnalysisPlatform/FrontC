@@ -30,7 +30,9 @@
 
 
 
-  $ ../printc/printc_bin.exe calipso/for.c
+
+
+  $ ../printc/printc_bin.exe for.c
   
   void main()
   {
@@ -49,7 +51,9 @@
 
 
 
-  $ ../printc/printc_bin.exe calipso/from.c
+
+
+  $ ../printc/printc_bin.exe from.c
   
   void main()
   {
@@ -79,7 +83,9 @@
   
 
 
-  $ ../printc/printc_bin.exe calipso/okp.c
+
+
+  $ ../printc/printc_bin.exe okp.c
   
   typedef int j_decompress_ptr, boolean, my_main_ptr, j_decompress_ptr, size_t,
   	JSAMPARRAY, JDIMENSION, j_common_ptr;
@@ -163,3 +169,4 @@
   	}
   }
   
+
