@@ -14,7 +14,3 @@
   (public_name FrontC)
   (wrapped false)
   (libraries unix))
-
-(deprecated_library_name
-  (old_public_name Frontc)
-  (new_public_name FrontC))
