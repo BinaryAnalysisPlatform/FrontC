@@ -1,3 +1,6 @@
+  $ ../printc/printc_bin.exe empty.c
+
+
   $ ../printc/printc_bin.exe volatile.c
   
   typedef int  const t1;
@@ -32,6 +35,8 @@
 
 
 
+
+
   $ ../printc/printc_bin.exe for.c
   
   void main()
@@ -47,6 +52,8 @@
   	}
   }
   
+
+
 
 
 
@@ -81,6 +88,8 @@
   		;
   }
   
+
+
 
 
 
