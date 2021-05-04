@@ -1,4 +1,19 @@
 (executable
-  (name calipso)
-  (public_name calipso)
-  (libraries FrontC))
+ (package calipso)
+ (name calipso)
+ (public_name calipso)
+ (libraries FrontC calipso)
+ (modules calipso))
+
+(executable
+ (package calipso)
+ (name stat)
+ (public_name calipso_stat)
+ (libraries FrontC calipso)
+ (modules stat))
+
+(library
+ (name calipso)
+ (wrapped false)
+ (modules algo gen label reduce)
+ (libraries FrontC))
