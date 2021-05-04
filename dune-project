@@ -2,9 +2,11 @@
 (using menhir 2.0)
 (cram enable)
 (version 4.0.0)
+(name FrontC)
 
 (license LGPL-2.0-only)
 (authors "Hugues Cassé <casse@irit.fr> et al")
+(maintainers "Ivan Gotovchits <ivg@ieee.org>")
 (source (github BinaryAnalysisPlatform/FrontC))
 (homepage "https://github.com/BinaryAnalysisPlatform/FrontC")
 (bug_reports "https://github.com/BinaryAnalysisPlatform/FrontC/issues")

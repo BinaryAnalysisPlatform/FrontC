@@ -4,6 +4,7 @@ version: "4.0.0"
 synopsis: "Parses C programs to an abstract syntax tree"
 description:
   "FrontC provides a C parser and an OCaml definition of an abstract syntax treee for the C language. It also includes AST pretty-printers in plain and XML formats."
+maintainer: ["Ivan Gotovchits <ivg@ieee.org>"]
 authors: ["Hugues Cassé <casse@irit.fr> et al"]
 license: "LGPL-2.0-only"
 tags: ["FrontC" "C" "parser" "XML"]
