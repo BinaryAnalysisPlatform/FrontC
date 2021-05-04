@@ -1,0 +1,2 @@
+(cram
+ (deps printc/printc_bin.exe))

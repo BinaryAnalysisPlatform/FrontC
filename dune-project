@@ -1,5 +1,6 @@
 (lang dune 2.7)
 (using menhir 2.0)
+(cram enable)
 (version 4.0.0)
 
 (license LGPL-2.0-only)

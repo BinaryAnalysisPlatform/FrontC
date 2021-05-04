@@ -26,4 +26,41 @@ FrontC v3.0 (stable)
 The [stable][1] branch supports only ANSI C (C89) with partial support for some GNU extensions. This branch is using ocamlyacc as a parser generator and doesn't accept new features, only occasional bug fixes.
 
 
+
+Building and Installing
+-----------------------
+
+The easiest option is to install using [opam][2], e.g.,
+
+```
+opam install FrontC # or calipso, or ctoxml
+```
+
+The command above will install the latest version of the package from the ocaml.org [opam-repositor][3]. To get the current development (not yet released to ocaml.org) version of a package, you can use the `opam pin command`, e.g.,
+
+```
+opam pin FrontC --dev-repo
+```
+
+You can also just clone this repo and do
+```
+make && make install # translates to `dune build && dune install`
+```
+
+If you change anything do not forget to run tests with `make test`.
+
+
+Documentation
+-------------
+
+You can easily get the documentation using odig,
+
+```
+odig doc FrontC
+```
+
+
+
 [1]: https://github.com/BinaryAnalysisPlatform/FrontC/tree/stable
+[2]: https://opam.ocaml.org
+[3]: https://opam.ocaml.org/packages/
