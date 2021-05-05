@@ -180,6 +180,21 @@ let init_lexicon _ =
   List.iter add keywords;
   if has_gcc ()  then List.iter add gnu_keywords
 
+let typename name =
+  match StringHashtbl.find_opt lexicon name with
+  | None -> name
+  | Some token -> match token () with
+    | NAMED_TYPE name -> name
+    | _ -> name
+
+let typenames name = List.length (StringHashtbl.find_all lexicon name)
+let phantomized_name =
+  let phantoms = ref 0 in
+    fun name ->
+      incr phantoms;
+      Format.asprintf "%s$%d" name !phantoms
+
+
 let add_type name =
   StringHashtbl.add lexicon name (id (NAMED_TYPE name))
 
