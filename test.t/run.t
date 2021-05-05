@@ -37,6 +37,8 @@
 
 
 
+
+
   $ ../printc/printc_bin.exe for.c
   
   void main()
@@ -52,6 +54,8 @@
   	}
   }
   
+
+
 
 
 
@@ -88,6 +92,8 @@
   		;
   }
   
+
+
 
 
 
@@ -179,3 +185,14 @@
   }
   
 
+
+
+  $ echo 'typedef char uint8_t; typedef char uint8_t; typedef char uint8_t; void foo(uint8_t x);' |  ../printc/printc_bin.exe
+  
+  typedef char uint8_t;
+  
+  typedef char uint8_t$1;
+  
+  typedef char uint8_t$2;
+  
+  void foo(uint8_t x);
