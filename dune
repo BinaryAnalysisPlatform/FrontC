@@ -1,3 +1,2 @@
 (cram
- (deps printc/printc_bin.exe
-       ctoxml/ctoxml_bin.exe))
+ (deps printc/printc_bin.exe))
