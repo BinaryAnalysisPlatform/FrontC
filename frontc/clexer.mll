@@ -187,14 +187,6 @@ let typename name =
     | NAMED_TYPE name -> name
     | _ -> name
 
-let typenames name = List.length (StringHashtbl.find_all lexicon name)
-let phantomized_name =
-  let phantoms = ref 0 in
-    fun name ->
-      incr phantoms;
-      Format.asprintf "%s$%d" name !phantoms
-
-
 let add_type name =
   StringHashtbl.add lexicon name (id (NAMED_TYPE name))
 

@@ -498,10 +498,8 @@ typedef_dec opt_gcc_attributes
     {(fst $1, snd $1, $2, NOTHING)}
 ;
 typedef_dec:
-  | IDENT
+  | IDENT | NAMED_TYPE
     {($1, NO_TYPE)}
-  | NAMED_TYPE
-    {(Clexer.phantomized_name $1, NO_TYPE)}
   |		STAR typedef_dec
     {(fst $2, set_type (PTR NO_TYPE) (snd $2))}
   |		STAR RESTRICT typedef_dec
