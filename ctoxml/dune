@@ -3,3 +3,10 @@
   (public_name ctoxml)
   (package ctoxml)
   (libraries FrontC))
+
+(env
+ (_ (binaries (./ctoxml_bin.exe as ctoxml))))
+
+
+(cram
+  (deps ${bin:ctoxml}))

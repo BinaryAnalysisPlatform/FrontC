@@ -180,6 +180,13 @@ let init_lexicon _ =
   List.iter add keywords;
   if has_gcc ()  then List.iter add gnu_keywords
 
+let typename name =
+  match StringHashtbl.find_opt lexicon name with
+  | None -> name
+  | Some token -> match token () with
+    | NAMED_TYPE name -> name
+    | _ -> name
+
 let add_type name =
   StringHashtbl.add lexicon name (id (NAMED_TYPE name))
 
