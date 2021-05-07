@@ -9,7 +9,7 @@ tags: ["FrontC" "C" "parser" "XML"]
 homepage: "https://github.com/BinaryAnalysisPlatform/FrontC"
 bug-reports: "https://github.com/BinaryAnalysisPlatform/FrontC/issues"
 depends: [
-  "dune" {>= "2.7"}
+  "dune" {>= "2.8"}
   "FrontC" {>= "4.0.0"}
   "odoc" {with-doc}
 ]

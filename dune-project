@@ -1,4 +1,4 @@
-(lang dune 2.7)
+(lang dune 2.8)
 (using menhir 2.0)
 (cram enable)
 (version 4.0.0)
@@ -18,7 +18,7 @@
  (description "FrontC provides a C parser and an OCaml definition \
                of an abstract syntax treee for the C language. It also \
                includes AST pretty-printers in plain and XML formats.")
- (depends (dune (and (>= 2.7) :build)) menhir)
+ (depends (dune (and (>= 2.8) :build)) menhir)
  (tags (FrontC C parser XML)))
 
 (package
