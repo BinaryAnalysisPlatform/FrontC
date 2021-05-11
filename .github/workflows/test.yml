@@ -29,4 +29,7 @@ jobs:
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
-      - run: opam pin add FrontC.dev . --yes --with-test
+      - run: opam pin add FrontC . --no-action
+      - run: opam install FrontC --deps-only
+      - run: opam exec -- dune build
+      - run: opam exec -- dune runtest

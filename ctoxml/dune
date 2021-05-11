@@ -5,8 +5,7 @@
   (libraries FrontC))
 
 (env
- (_ (binaries (./ctoxml_bin.exe as ctoxml))))
-
+ (_ (binaries (./ctoxml as ctoxml))))
 
 (cram
-  (deps ${bin:ctoxml}))
+  (deps %{bin:ctoxml}))
