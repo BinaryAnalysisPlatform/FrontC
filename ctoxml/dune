@@ -10,4 +10,5 @@
 
 (cram
   (package ctoxml)
+  (applies_to test)
   (deps %{bin:ctoxml}))

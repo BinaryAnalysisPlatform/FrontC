@@ -18,7 +18,7 @@
  (description "FrontC provides a C parser and an OCaml definition \
                of an abstract syntax treee for the C language. It also \
                includes AST pretty-printers in plain and XML formats.")
- (depends (dune (and (>= 2.8) :build)) menhir)
+ (depends (dune (>= 2.8)) menhir)
  (tags (FrontC C parser XML)))
 
 (package

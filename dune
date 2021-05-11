@@ -1,3 +1,4 @@
 (cram
  (package FrontC)
+ (applies_to test.t)
  (deps printc/printc_bin.exe))
