@@ -213,14 +213,15 @@ global_type global_defs SEMICOLON
       | _ ->
 	 parse_error $symbolstartofs $endofs
     }
-  | 	global_type global_proto basic_asm SEMICOLON
+  | 	global_type global_proto basic_asm opt_gcc_attributes SEMICOLON
     {
-      let (_, base, _, _) = $2 in
+      let (id, base, attr, exp) = $2 in
+      let name = (id, base, attr@$4, exp) in
       match base with
 	PROTO _ ->
-	 FUNDEF (set_single $1 $2, ([], $3))
+	 FUNDEF (set_single $1 name, ([], $3))
       | OLD_PROTO _ ->
-	 OLDFUNDEF (set_single $1 $2, [], ([], $3))
+	 OLDFUNDEF (set_single $1 name, [], ([], $3))
       | _ ->
 	 parse_error $symbolstartofs $endofs
     }
