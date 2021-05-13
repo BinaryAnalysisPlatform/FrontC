@@ -681,6 +681,12 @@ and print_attribute attr =
     print "__extension__"
   | GNU_INLINE ->
     print "__inline__"
+  | GNU_TYPE_ARG (typ,sto) ->
+    if sto <> NO_STORAGE then begin
+      print (get_storage sto);
+      space ()
+    end;
+    print_base_type typ
 
 
 (*
