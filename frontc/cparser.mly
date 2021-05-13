@@ -250,7 +250,7 @@ global_mod:
 ;
 
 global_qual:
-qual_type      {$1}
+  |  qual_type      {$1}
   |  global_qual qual_type   {apply_qual $1 $2}
   |  global_qual global_mod   {(fst $1, $2::(snd $1))}
 ;
@@ -513,7 +513,12 @@ typedef_dec:
 field_list: field* {$1};
 
 field:
-field_type field_defs SEMICOLON {set_name_group $1 (List.rev $2)}
+  | field_type field_defs opt_gcc_attributes SEMICOLON
+   {
+     match $3, set_name_group $1 (List.rev $2) with
+     | [],r -> r
+     | attrs,(t,s,ns) -> GNU_TYPE (attrs,t),s,ns
+   }
 ;
 field_type:
 field_mod_list_opt field_qual
@@ -711,7 +716,7 @@ only_dec:
 
 /*** Base type ***/
 qual_type:
-VOID       {(VOID, [])}
+  |  VOID       {(VOID, [])}
   |  CHAR       {(CHAR NO_SIGN, [])}
   |  INT        {(INT (NO_SIZE, NO_SIGN), [])}
   |  FLOAT       {(FLOAT false, [])}
@@ -1033,16 +1038,13 @@ opt_gnu_args:
     { $1 }
 ;
 
-gnu_args:
-gnu_arg
-    {[$1]}
-  | gnu_args COMMA gnu_arg
-    {$3::$1}
-;
+gnu_args: separated_nonempty_list(COMMA,gnu_arg) {$1} ;
 
 gnu_arg:
-gnu_id
+  | gnu_id
     { GNU_ID $1 }
+  | local_type
+    {GNU_TYPE_ARG (fst $1, snd $1)}
   | constant
     { GNU_CST $1 }
   | gnu_id LPAREN opt_gnu_args RPAREN
@@ -1050,12 +1052,11 @@ gnu_id
 ;
 
 gnu_id:
-IDENT
-    { $1 }
+  | IDENT  { $1 }
   | GNU_ATTRS
     {
       match $1 with
- [(Cabs.GNU_ID name)] -> name
+        [(Cabs.GNU_ID name)] -> name
       | _ -> parse_error $symbolstartofs $endofs
     }
 ;

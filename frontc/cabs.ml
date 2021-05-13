@@ -263,3 +263,4 @@ and gnu_attr =
   (** Support of __extension__ keyword *)
   | GNU_INLINE
   (** Support of __inline keyword *)
+  | GNU_TYPE_ARG of base_type * storage

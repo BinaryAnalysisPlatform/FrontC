@@ -303,18 +303,15 @@ and convert_type _type =
 
 and convert_gnu_attr attr =
   match attr with
-    GNU_NONE
-    -> Cxml.new_elt "none" [] []
-  | GNU_ID id
-    -> Cxml.new_elt "id" [("value", id)] []
-  | GNU_CST cst
-    -> convert_const cst
-  | GNU_EXTENSION
-    -> Cxml.new_elt "extension" [] []
-  | GNU_INLINE
-    -> Cxml.new_elt "inline" [] []
-  | GNU_CALL (id, attrs)
-    -> Cxml.new_elt "call" [("id", id)] (List.map convert_gnu_attr attrs)
+  | GNU_NONE -> Cxml.new_elt "none" [] []
+  | GNU_ID id -> Cxml.new_elt "id" [("value", id)] []
+  | GNU_CST cst -> convert_const cst
+  | GNU_EXTENSION -> Cxml.new_elt "extension" [] []
+  | GNU_INLINE -> Cxml.new_elt "inline" [] []
+  | GNU_CALL (id, attrs) ->
+    Cxml.new_elt "call" [("id", id)] (List.map convert_gnu_attr attrs)
+  | GNU_TYPE_ARG (typ,_) -> convert_type typ
+
 
 and convert_fundef _type store name vars body =
 
