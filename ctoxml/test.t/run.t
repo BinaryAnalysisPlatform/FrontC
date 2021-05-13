@@ -3875,3 +3875,16 @@
   		</field>
   	</struct>
   </file>
+
+  $ echo 'typedef int T; T bar();' | ctoxml
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<type id="T" store="auto">
+  		<long/>
+  	</type>
+  	<fundec id="bar" store="auto">
+  		<type>
+  			<type ref="T"/>
+  		</type>
+  	</fundec>
+  </file>
