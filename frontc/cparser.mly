@@ -139,7 +139,7 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %left PIPE_PIPE
 %left AND_AND
 %left PIPE
-%left  CIRC
+%left CIRC
 %left AND
 %left EQ_EQ EXCLAM_EQ
 %left INF SUP INF_EQ SUP_EQ
@@ -157,7 +157,7 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %type <Cabs.definition> global
 %type <Cabs.base_type * Cabs.storage> global_type
 %type <Cabs.base_type * modifier list> global_qual
-%type <modifier list> global_mod_list_opt global_mod_list
+
 %type <modifier> global_mod
 %type <Cabs.name list> global_defs
 %type <Cabs.name> global_def
@@ -181,53 +181,21 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %type <Cabs.single_name list * bool> parameters
 %type <string> string_list
 
-
 %%
 
 interpret: file {$1};
 
 file:
   | EOF   {[]}
-  | globals EOF {List.rev $1};
+  | globals EOF {$1};
+;
 
 globals:
-  | global      {[$1]}
-  | globals global     {$2::$1}
+  | global* EOF {$1}
   | error {parse_error $symbolstartofs $endofs}
 ;
 
-
-/*** Global Definition ***/
-global:
-global_type global_defs SEMICOLON
-    {DECDEF (set_name_group $1 (List.rev $2))}
-  |  global_type global_proto body
-    {
-      let (_, base, _, _) = $2 in
-      match base with
- PROTO _ ->
-  FUNDEF (set_single $1 $2, (snd $3))
-      | OLD_PROTO _ ->
-  OLDFUNDEF (set_single $1 $2, [], (snd $3))
-      | _ ->
-  parse_error $symbolstartofs $endofs
-    }
-  |  global_type global_proto basic_asm opt_gcc_attributes SEMICOLON
-    {
-      let (id, base, attr, exp) = $2 in
-      let name = (id, base, attr@$4, exp) in
-      match base with
- PROTO _ ->
-  FUNDEF (set_single $1 name, ([], $3))
-      | OLD_PROTO _ ->
-  OLDFUNDEF (set_single $1 name, [], ([], $3))
-      | _ ->
-  parse_error $symbolstartofs $endofs
-    }
-  |  global_type old_proto old_pardefs body
-    { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
-  |  global_type SEMICOLON
-    {ONLYTYPEDEF (set_name_group $1 [])}
+typedef:
   |  TYPEDEF typedef_type typedef_defs SEMICOLON
     {let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $3 in
      TYPEDEF (set_name_group (fst $2, snd $2) $3, [])}
@@ -235,40 +203,62 @@ global_type global_defs SEMICOLON
     {let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $4 in
      TYPEDEF (set_name_group (fst $3, snd $3) $4, $1)}
 ;
+
+/*** Global Definition ***/
+global:
+  | global_type global_defs SEMICOLON
+    {DECDEF (set_name_group $1 (List.rev $2))}
+  | global_type global_proto body
+    {
+      let (_, base, _, _) = $2 in
+      match base with
+      | PROTO _ -> FUNDEF (set_single $1 $2, (snd $3))
+      | OLD_PROTO _ -> OLDFUNDEF (set_single $1 $2, [], (snd $3))
+      | _ -> parse_error $symbolstartofs $endofs
+    }
+  | global_type global_proto basic_asm opt_gcc_attributes SEMICOLON
+    {
+      let (id, base, attr, exp) = $2 in
+      let name = (id, base, attr@$4, exp) in
+      match base with
+      | PROTO _ -> FUNDEF (set_single $1 name, ([], $3))
+      | OLD_PROTO _ -> OLDFUNDEF (set_single $1 name, [], ([], $3))
+      | _ -> parse_error $symbolstartofs $endofs
+    }
+  |  global_type old_proto old_pardefs body
+    { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
+  |  global_type SEMICOLON
+    {ONLYTYPEDEF (set_name_group $1 [])}
+  | typedef {$1}
+;
 global_type:
-global_mod_list_opt global_qual
+  | global_mod_list_opt global_qual
     {apply_mods (snd $2) (apply_mods $1 ((fst $2), NO_STORAGE))}
-  |  global_mod_list_opt comp_type global_mod_list_opt
+  | global_mod_list_opt comp_type global_mod_list_opt
     {apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))}
-  |  global_mod_list_opt NAMED_TYPE global_mod_list_opt
+  | global_mod_list_opt NAMED_TYPE global_mod_list_opt
     {apply_mods $3 (apply_mods $1 (NAMED_TYPE $2, NO_STORAGE))}
-  |  global_mod_list_opt
+  | global_mod_list_opt
     {apply_mods $1 (NO_TYPE, NO_STORAGE)}
 ;
-global_mod_list_opt:
-/* empty */      {[]}
-  |  global_mod_list     {List.rev $1}
-;
-global_mod_list:
-global_mod      {[$1]}
-  |  global_mod_list global_mod  {$2::$1}
-;
+global_mod_list_opt: global_mod* {$1};
+
 global_mod:
-STATIC       {BASE_STORAGE STATIC}
-  |  CONST       {BASE_CONST}
+  |  STATIC        {BASE_STORAGE STATIC}
+  |  CONST         {BASE_CONST}
   |  VOLATILE      {BASE_VOLATILE}
-  |  EXTERN       {BASE_STORAGE EXTERN}
-  |  gcc_attribute     { BASE_GNU_ATTR $1 }
+  |  EXTERN        {BASE_STORAGE EXTERN}
+  |  gcc_attribute {BASE_GNU_ATTR $1 }
 ;
+
 global_qual:
 qual_type      {$1}
   |  global_qual qual_type   {apply_qual $1 $2}
   |  global_qual global_mod   {(fst $1, $2::(snd $1))}
 ;
-global_defs:
-global_def      {[$1]}
-  |  global_defs COMMA global_def {$3::$1}
-;
+
+global_defs:  separated_nonempty_list(COMMA, global_def) {$1};
+
 global_def:
 global_dec opt_gcc_attributes
     {(fst $1, snd $1, $2, NOTHING)}
@@ -276,7 +266,7 @@ global_dec opt_gcc_attributes
     {(fst $1, snd $1, $2, $4)}
 ;
 global_dec:
-IDENT
+  |  IDENT
     {($1, set_tline NO_TYPE)}
   |  LPAREN global_dec RPAREN
     {$2}
@@ -326,15 +316,13 @@ old_pardecs      {(List.rev $1, false)}
   |  old_pardecs ELLIPSIS   {(List.rev $1, true)}
 ;
 old_pardecs:
-IDENT       {[$1]}
+  |  IDENT       {[$1]}
   |  old_pardecs COMMA IDENT   {$3::$1}
   |  old_pardecs COMMA NAMED_TYPE {$3::$1}
 ;
 
-old_pardefs:
-old_pardef      {[$1]}
-  |  old_pardefs old_pardef   {$2::$1}
-;
+old_pardefs: old_pardef+ {$1};
+
 old_pardef:
 old_type old_defs SEMICOLON
     {set_name_group $1 (List.rev $2)}
@@ -912,14 +900,14 @@ constant
     {set_eline $2 (BINARY(SHR_ASSIGN ,$1 , $3))}
 ;
 constant:
-CST_INT       {CONST_INT $1}
+  |  CST_INT       {CONST_INT $1}
   |  CST_FLOAT      {CONST_FLOAT $1}
   |  CST_CHAR      {CONST_CHAR $1}
   |  string_list      {CONST_STRING $1}
 ;
 string_list:
-CST_STRING      {$1}
-  |  string_list CST_STRING   {$1 ^ $2}
+  | CST_STRING      {$1}
+  | string_list CST_STRING   {$1 ^ $2}
 ;
 
 
@@ -950,9 +938,9 @@ statement      {$1}
   |    stats statement     {SEQUENCE($1, $2)}
 ;
 statement:
-SEMICOLON
+  | SEMICOLON
     {set_line $1 NOP}
-  |  comma_expression SEMICOLON
+  | comma_expression SEMICOLON
     {set_line $2 (COMPUTATION (smooth_expression $1))}
   |  body
     {set_line (fst $1) (BLOCK (snd $1))}
@@ -966,8 +954,7 @@ SEMICOLON
     {set_line $1 (WHILE (smooth_expression $3, $5))}
   |  DO statement WHILE LPAREN comma_expression RPAREN SEMICOLON
     {set_line $1 (DOWHILE (smooth_expression $5, $2))}
-  |  FOR LPAREN opt_expression SEMICOLON opt_expression
-SEMICOLON opt_expression RPAREN statement
+  |  FOR LPAREN opt_expression SEMICOLON opt_expression SEMICOLON opt_expression RPAREN statement
     {set_line $1 (FOR ($3, $5, $7, $9))}
   |  IDENT COLON statement
     {LABEL ($1, $3)}
@@ -1001,20 +988,12 @@ ASM opt_gcc_attributes LPAREN string_list RPAREN
   { ASM $5 }
 
 /*** GNU asm ***/
-gnu_asm_io:
-COLON gnu_asm_args
-    { $2 }
-;
+gnu_asm_io: COLON gnu_asm_args { $2 };
 
-gnu_asm_args:
-gnu_asm_arg
-    { [$1] }
-  | gnu_asm_args COMMA gnu_asm_arg
-    { $3::$1 }
-;
+gnu_asm_args: separated_nonempty_list(COMMA, gnu_asm_arg) {$1};
 
 gnu_asm_arg:
-CST_STRING LPAREN expression RPAREN
+  | CST_STRING LPAREN expression RPAREN
     { ("", $1, $3) }
   | LBRACKET IDENT RBRACKET CST_STRING LPAREN expression RPAREN
     { ($2, $4, $6) }
@@ -1028,7 +1007,7 @@ opt_gnu_asm_mods:
 ;
 
 gnu_asm_mods:
-CST_STRING
+  | CST_STRING
     { [$1] }
   | gnu_asm_mods COMMA CST_STRING
     { $3::$1 }
