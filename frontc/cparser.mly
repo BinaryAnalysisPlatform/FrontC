@@ -185,10 +185,7 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 
 interpret: file {$1};
 
-file:
-  | EOF   {[]}
-  | globals EOF {$1};
-;
+file: globals {$1};
 
 globals:
   | global* EOF {$1}
@@ -546,7 +543,7 @@ qual_type      {$1}
   |  field_qual field_mod   {(fst $1, $2::(snd $1))}
 ;
 field_defs:
-field_defs COMMA field_def  {$3::$1}
+  | field_defs COMMA field_def  {$3::$1}
   |  field_def      {[$1]}
 ;
 field_def:
