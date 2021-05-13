@@ -4,8 +4,5 @@
   (package ctoxml)
   (libraries FrontC))
 
-(env
- (_ (binaries (./ctoxml as ctoxml))))
-
 (cram
   (deps %{bin:ctoxml}))
