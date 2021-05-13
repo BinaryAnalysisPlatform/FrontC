@@ -147,7 +147,7 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %left PLUS MINUS
 %left STAR SLASH PERCENT CONST VOLATILE RESTRICT
 %right EXCLAM TILDE PLUS_PLUS MINUS_MINUS CAST RPAREN ADDROF
-%left  LBRACKET
+%left LBRACKET
 %left DOT ARROW LPAREN SIZEOF
 
 /* Non-terminals informations */
@@ -970,12 +970,9 @@ statement:
 
 /* "Basic asm" https://gcc.gnu.org/onlinedocs/gcc/Basic-Asm.html#Basic-Asm */
 basic_asm:
-ASM opt_gcc_attributes LPAREN string_list RPAREN
-  { ASM $4 }
-| ASM VOLATILE opt_gcc_attributes LPAREN string_list RPAREN
-  { ASM $5 }
-| ASM opt_gcc_attributes VOLATILE LPAREN string_list RPAREN
-  { ASM $5 }
+  | ASM VOLATILE? opt_gcc_attributes LPAREN; asm=string_list; RPAREN
+    { ASM asm }
+;
 
 /*** GNU asm ***/
 gnu_asm_io: COLON gnu_asm_args { $2 };
