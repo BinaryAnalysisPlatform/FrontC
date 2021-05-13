@@ -38,7 +38,7 @@
         | _ -> raise BadModifier in
       let check_access typ =
         match typ with
-          PROTO _ | OLD_PROTO _ | CONST _ | VOLATILE _ -> false
+          PROTO _ | OLD_PROTO _ -> false
           | _ -> true in
       match modi with
         BASE_SIGN _ -> (mod_root typ, sto)
