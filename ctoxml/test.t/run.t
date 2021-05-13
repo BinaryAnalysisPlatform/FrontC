@@ -3888,3 +3888,15 @@
   		</type>
   	</fundec>
   </file>
+
+  $ echo 'const volatile int n;' | dune exec ctoxml
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<var id="n" store="auto">
+  		<volatile>
+  			<const>
+  				<long/>
+  			</const>
+  		</volatile>
+  	</var>
+  </file>
