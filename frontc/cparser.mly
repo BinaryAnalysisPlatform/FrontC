@@ -193,11 +193,12 @@ globals:
 ;
 
 typedef:
-  |  TYPEDEF typedef_type typedef_defs SEMICOLON
-    {let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $3 in
-     TYPEDEF (set_name_group (fst $2, snd $2) $3, [])}
-  |  gcc_attribute TYPEDEF typedef_type typedef_defs SEMICOLON
-    {let _ = List.iter (fun (id, _, _, _) -> Clexer.add_type id) $4 in
+  |  TYPEDEF typedef_type typedef_defs
+    {
+      List.iter (fun (id, _, _, _) -> Clexer.add_type id) $3;
+      TYPEDEF (set_name_group (fst $2, snd $2) $3, [])}
+  |  gcc_attribute TYPEDEF typedef_type typedef_defs
+    {List.iter (fun (id, _, _, _) -> Clexer.add_type id) $4;
      TYPEDEF (set_name_group (fst $3, snd $3) $4, $1)}
 ;
 
@@ -226,7 +227,7 @@ global:
     { OLDFUNDEF (set_single $1 $2, List.rev $3, (snd $4)) }
   |  global_type SEMICOLON
     {ONLYTYPEDEF (set_name_group $1 [])}
-  | typedef {$1}
+  | typedef SEMICOLON {$1}
 ;
 global_type:
   | global_mod_list_opt global_qual
@@ -448,7 +449,7 @@ IDENT
 
 /*** Typedef Definition ***/
 typedef_type:
-typedef_sub
+  | typedef_sub
     {apply_mods (snd $1) ((fst $1), NO_STORAGE)}
   |  CONST typedef_sub
     {apply_mods (BASE_CONST::(snd $2)) ((fst $2), NO_STORAGE)}
