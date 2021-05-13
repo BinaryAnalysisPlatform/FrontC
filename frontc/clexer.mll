@@ -141,6 +141,7 @@ let keywords =
     ("signed", id SIGNED);
     ("unsigned", id UNSIGNED);
     ("volatile", id VOLATILE);
+    ("inline", id INLINE);
     ("__restrict", id RESTRICT);
     ("restrict", id RESTRICT);
     ("char", id CHAR);
