@@ -3865,3 +3865,13 @@
   		</param>
   	</fundec>
   </file>
+
+  $ echo 'struct foo {int x;};' | dune exec ctoxml
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<struct id="struct:foo">
+  		<field name="x">
+  			<long/>
+  		</field>
+  	</struct>
+  </file>

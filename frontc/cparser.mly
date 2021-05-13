@@ -509,10 +509,8 @@ typedef_dec:
 
 
 /*** Field Definition ***/
-field_list:
-field_list field    {$2::$1}
-  |  field       {[$1]}
-;
+field_list: field* {$1};
+
 field:
 field_type field_defs SEMICOLON {set_name_group $1 (List.rev $2)}
 ;
@@ -542,16 +540,11 @@ qual_type      {$1}
   |  field_qual qual_type   {apply_qual $1 $2}
   |  field_qual field_mod   {(fst $1, $2::(snd $1))}
 ;
-field_defs:
-  | field_defs COMMA field_def  {$3::$1}
-  |  field_def      {[$1]}
-;
-field_def:
-field_dec      {(fst $1, snd $1, [], NOTHING)}
-;
+field_defs: separated_nonempty_list(COMMA, field_def) {$1};
+
+field_def: field_dec {(fst $1, snd $1, [], NOTHING)} ;
+
 field_dec:
-/* emtpy */
-    {("", NO_TYPE)}
   |  IDENT
     {($1, NO_TYPE)}
   |  NAMED_TYPE
