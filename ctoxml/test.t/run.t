@@ -3900,3 +3900,1434 @@
   		</volatile>
   	</var>
   </file>
+
+  $ ctoxml echo.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<var id="strv" store="auto">
+  		<array>
+  			<ptr>
+  				<const>
+  					<char/>
+  				</const>
+  			</ptr>
+  			<size>
+  				<nothing/>
+  			</size>
+  		</array>
+  		<compound>
+  			<string>Now we will print some random stuff.</string>
+  			<string>Be not afraid of greatness:</string>
+  			<string>some are born great, some achieve greatness</string>
+  			<string>and some have greatness thrust upon them</string>
+  			<string>To thine own self be true, and it must follow</string>
+  			<string>as the night the day, thou canst not</string>
+  			<string>then be false to any man</string>
+  			<string>The course of true love never did run smooth</string>
+  		</compound>
+  	</var>
+  	<fundef id="print_endline" store="auto">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="msg" store="auto">
+  			<ptr>
+  				<const>
+  					<char/>
+  				</const>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="p" store="auto">
+  				<ptr>
+  					<char/>
+  				</ptr>
+  				<get ref="msg"/>
+  			</var>
+  			<while>
+  				<memof>
+  					<get ref="p"/>
+  				</memof>
+  				<call>
+  					<get ref="putchar"/>
+  					<memof>
+  						<postinc>
+  							<get ref="p"/>
+  						</postinc>
+  					</memof>
+  				</call>
+  			</while>
+  			<call>
+  				<get ref="putchar"/>
+  				<char>
+  </char>
+  			</call>
+  		</body>
+  	</fundef>
+  	<fundef id="print_strings" store="auto">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="strings" store="auto">
+  			<ptr>
+  				<ptr>
+  					<const>
+  						<char/>
+  					</const>
+  				</ptr>
+  			</ptr>
+  		</param>
+  		<body>
+  			<for>
+  				<set>
+  					<get ref="p"/>
+  					<get ref="strings"/>
+  				</set>
+  				<memof>
+  					<get ref="p"/>
+  				</memof>
+  				<postinc>
+  					<get ref="p"/>
+  				</postinc>
+  				<block>
+  					<call>
+  						<get ref="print_endline"/>
+  						<memof>
+  							<get ref="p"/>
+  						</memof>
+  					</call>
+  				</block>
+  			</for>
+  		</body>
+  	</fundef>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="argc" store="auto">
+  			<long/>
+  		</param>
+  		<param name="argv" store="auto">
+  			<ptr>
+  				<ptr>
+  					<const>
+  						<char/>
+  					</const>
+  				</ptr>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="i" store="auto">
+  				<long/>
+  			</var>
+  			<var id="j" store="auto">
+  				<long/>
+  			</var>
+  			<var id="strc" store="auto">
+  				<const>
+  					<long/>
+  				</const>
+  				<div>
+  					<sizeof>
+  						<get ref="strv"/>
+  					</sizeof>
+  					<sizeof>
+  						<memof>
+  							<get ref="strv"/>
+  						</memof>
+  					</sizeof>
+  				</div>
+  			</var>
+  			<var id="size" store="auto">
+  				<const>
+  					<long/>
+  				</const>
+  				<add>
+  					<add>
+  						<get ref="argc"/>
+  						<get ref="strc"/>
+  					</add>
+  					<int>1</int>
+  				</add>
+  			</var>
+  			<var id="strings" store="auto">
+  				<array>
+  					<ptr>
+  						<char/>
+  					</ptr>
+  					<size>
+  						<get ref="size"/>
+  					</size>
+  				</array>
+  			</var>
+  			<for>
+  				<set>
+  					<get ref="i"/>
+  					<int>0</int>
+  				</set>
+  				<lt>
+  					<get ref="i"/>
+  					<get ref="argc"/>
+  				</lt>
+  				<postinc>
+  					<get ref="i"/>
+  				</postinc>
+  				<block>
+  					<set>
+  						<index>
+  							<get ref="strings"/>
+  							<get ref="i"/>
+  						</index>
+  						<call>
+  							<get ref="strcpy"/>
+  							<call>
+  								<get ref="malloc"/>
+  								<add>
+  									<call>
+  										<get ref="strlen"/>
+  										<index>
+  											<get ref="argv"/>
+  											<get ref="i"/>
+  										</index>
+  									</call>
+  									<int>1</int>
+  								</add>
+  							</call>
+  							<index>
+  								<get ref="argv"/>
+  								<get ref="i"/>
+  							</index>
+  						</call>
+  					</set>
+  				</block>
+  			</for>
+  			<for>
+  				<set>
+  					<get ref="j"/>
+  					<int>0</int>
+  				</set>
+  				<lt>
+  					<get ref="j"/>
+  					<get ref="strc"/>
+  				</lt>
+  				<comma>
+  					<postinc>
+  						<get ref="j"/>
+  					</postinc>
+  					<postinc>
+  						<get ref="i"/>
+  					</postinc>
+  				</comma>
+  				<block>
+  					<var id="b" store="auto">
+  						<ptr>
+  							<char/>
+  						</ptr>
+  						<add>
+  							<call>
+  								<get ref="strchr"/>
+  								<index>
+  									<get ref="strv"/>
+  									<get ref="j"/>
+  								</index>
+  								<char> </char>
+  							</call>
+  							<int>1</int>
+  						</add>
+  					</var>
+  					<var id="e" store="auto">
+  						<ptr>
+  							<char/>
+  						</ptr>
+  						<call>
+  							<get ref="strchr"/>
+  							<get ref="b"/>
+  							<char> </char>
+  						</call>
+  					</var>
+  					<var id="dst" store="auto">
+  						<ptr>
+  							<char/>
+  						</ptr>
+  						<call>
+  							<get ref="malloc"/>
+  							<get ref="size"/>
+  						</call>
+  					</var>
+  					<call>
+  						<get ref="memmove"/>
+  						<get ref="dst"/>
+  						<get ref="b"/>
+  						<get ref="size"/>
+  					</call>
+  					<set>
+  						<index>
+  							<get ref="dst"/>
+  							<sub>
+  								<get ref="size"/>
+  								<int>1</int>
+  							</sub>
+  						</index>
+  						<get ref="NULL"/>
+  					</set>
+  					<set>
+  						<index>
+  							<get ref="strings"/>
+  							<get ref="i"/>
+  						</index>
+  						<get ref="dst"/>
+  					</set>
+  				</block>
+  			</for>
+  			<set>
+  				<index>
+  					<get ref="strings"/>
+  					<sub>
+  						<get ref="size"/>
+  						<int>1</int>
+  					</sub>
+  				</index>
+  				<get ref="NULL"/>
+  			</set>
+  			<call>
+  				<get ref="print_strings"/>
+  				<get ref="strings"/>
+  			</call>
+  			<for>
+  				<set>
+  					<get ref="i"/>
+  					<int>0</int>
+  				</set>
+  				<lt>
+  					<get ref="i"/>
+  					<get ref="size"/>
+  				</lt>
+  				<postinc>
+  					<get ref="i"/>
+  				</postinc>
+  				<block>
+  					<call>
+  						<get ref="free"/>
+  						<index>
+  							<get ref="strings"/>
+  							<get ref="i"/>
+  						</index>
+  					</call>
+  				</block>
+  			</for>
+  			<return>
+  				<int>0</int>
+  			</return>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml so.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundec id="foo" store="static">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  	</fundec>
+  	<fundec id="bar" store="extern">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  	</fundec>
+  </file>
+  $ ctoxml obj.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="sum_internal_1" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  		<param name="b" store="auto">
+  			<long/>
+  		</param>
+  		<body>
+  			<return>
+  				<add>
+  					<get ref="a"/>
+  					<get ref="b"/>
+  				</add>
+  			</return>
+  		</body>
+  	</fundef>
+  	<fundec id="sum_internal_3" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  		<param name="b" store="auto">
+  			<long/>
+  		</param>
+  	</fundec>
+  	<fundef id="sum_internal_2" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  		<param name="b" store="auto">
+  			<long/>
+  		</param>
+  		<body>
+  			<var id="c" store="auto">
+  				<long/>
+  				<call>
+  					<get ref="sum_internal_3"/>
+  					<get ref="a"/>
+  					<int>42</int>
+  				</call>
+  			</var>
+  			<return>
+  				<add>
+  					<call>
+  						<get ref="sum_internal_1"/>
+  						<get ref="a"/>
+  						<get ref="b"/>
+  					</call>
+  					<get ref="c"/>
+  				</add>
+  			</return>
+  		</body>
+  	</fundef>
+  	<fundec id="sum_external" store="extern">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="a" store="auto">
+  			<long/>
+  		</param>
+  		<param name="b" store="auto">
+  			<long/>
+  		</param>
+  	</fundec>
+  </file>
+  $ ctoxml symexec-crc32.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="crc32" store="auto">
+  		<type>
+  			<ulong/>
+  		</type>
+  		<param name="message" store="auto">
+  			<ptr>
+  				<uchar/>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="i" store="auto">
+  				<long/>
+  			</var>
+  			<var id="j" store="auto">
+  				<long/>
+  			</var>
+  			<var id="byte" store="auto">
+  				<ulong/>
+  			</var>
+  			<var id="crc" store="auto">
+  				<ulong/>
+  			</var>
+  			<var id="mask" store="auto">
+  				<ulong/>
+  			</var>
+  			<set>
+  				<get ref="i"/>
+  				<int>0</int>
+  			</set>
+  			<set>
+  				<get ref="crc"/>
+  				<int>0xFFFFFFFF</int>
+  			</set>
+  			<while>
+  				<ne>
+  					<index>
+  						<get ref="message"/>
+  						<get ref="i"/>
+  					</index>
+  					<int>0</int>
+  				</ne>
+  				<block>
+  					<set>
+  						<get ref="byte"/>
+  						<index>
+  							<get ref="message"/>
+  							<get ref="i"/>
+  						</index>
+  					</set>
+  					<set>
+  						<get ref="crc"/>
+  						<xor>
+  							<get ref="crc"/>
+  							<get ref="byte"/>
+  						</xor>
+  					</set>
+  					<for>
+  						<set>
+  							<get ref="j"/>
+  							<int>7</int>
+  						</set>
+  						<ge>
+  							<get ref="j"/>
+  							<int>0</int>
+  						</ge>
+  						<postdec>
+  							<get ref="j"/>
+  						</postdec>
+  						<block>
+  							<set>
+  								<get ref="mask"/>
+  								<neg>
+  									<band>
+  										<get ref="crc"/>
+  										<int>1</int>
+  									</band>
+  								</neg>
+  							</set>
+  							<set>
+  								<get ref="crc"/>
+  								<xor>
+  									<shr>
+  										<get ref="crc"/>
+  										<int>1</int>
+  									</shr>
+  									<band>
+  										<int>0xEDB88320</int>
+  										<get ref="mask"/>
+  									</band>
+  								</xor>
+  							</set>
+  						</block>
+  					</for>
+  					<set>
+  						<get ref="i"/>
+  						<add>
+  							<get ref="i"/>
+  							<int>1</int>
+  						</add>
+  					</set>
+  				</block>
+  			</while>
+  			<return>
+  				<bnot>
+  					<get ref="crc"/>
+  				</bnot>
+  			</return>
+  		</body>
+  	</fundef>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="buf1" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<int>16</int>
+  					</size>
+  				</array>
+  			</var>
+  			<var id="buf2" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<int>16</int>
+  					</size>
+  				</array>
+  			</var>
+  			<if>
+  				<and>
+  					<call>
+  						<get ref="fgets"/>
+  						<get ref="buf1"/>
+  						<sizeof>
+  							<get ref="buf1"/>
+  						</sizeof>
+  						<get ref="stdin"/>
+  					</call>
+  					<call>
+  						<get ref="fgets"/>
+  						<get ref="buf2"/>
+  						<sizeof>
+  							<get ref="buf2"/>
+  						</sizeof>
+  						<get ref="stdin"/>
+  					</call>
+  				</and>
+  				<block>
+  					<if>
+  						<eq>
+  							<call>
+  								<get ref="crc32"/>
+  								<get ref="buf1"/>
+  							</call>
+  							<call>
+  								<get ref="crc32"/>
+  								<get ref="buf2"/>
+  							</call>
+  						</eq>
+  						<block>
+  							<call>
+  								<get ref="puts"/>
+  								<string>access granted</string>
+  							</call>
+  						</block>
+  						<nop/>
+  					</if>
+  				</block>
+  				<nop/>
+  			</if>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-faux.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<var id="sneaky" store="auto">
+  		<ptr>
+  			<char/>
+  		</ptr>
+  		<string>SOSNEAKY</string>
+  	</var>
+  	<fundef id="accepted" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<call>
+  				<get ref="puts"/>
+  				<string>access granted!</string>
+  			</call>
+  			<call>
+  				<get ref="exit"/>
+  				<int>0</int>
+  			</call>
+  		</body>
+  	</fundef>
+  	<fundef id="rejected" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<call>
+  				<get ref="exit"/>
+  				<int>1</int>
+  			</call>
+  		</body>
+  	</fundef>
+  	<fundef id="authenticate" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="username" store="auto">
+  			<ptr>
+  				<char/>
+  			</ptr>
+  		</param>
+  		<param name="password" store="auto">
+  			<ptr>
+  				<char/>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="entry" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<add>
+  							<mul>
+  								<get ref="BUFSIZE"/>
+  								<int>2</int>
+  							</mul>
+  							<int>2</int>
+  						</add>
+  					</size>
+  				</array>
+  			</var>
+  			<mul>
+  				<get ref="FILE"/>
+  				<get ref="pwfile"/>
+  			</mul>
+  			<if>
+  				<eq>
+  					<call>
+  						<get ref="strcmp"/>
+  						<get ref="password"/>
+  						<get ref="sneaky"/>
+  					</call>
+  					<int>0</int>
+  				</eq>
+  				<return>
+  					<int>1</int>
+  				</return>
+  				<nop/>
+  			</if>
+  			<set>
+  				<get ref="pwfile"/>
+  				<call>
+  					<get ref="fopen"/>
+  					<string>passwd</string>
+  					<string>r</string>
+  				</call>
+  			</set>
+  			<if>
+  				<not>
+  					<get ref="pwfile"/>
+  				</not>
+  				<call>
+  					<get ref="rejected"/>
+  				</call>
+  				<nop/>
+  			</if>
+  			<while>
+  				<call>
+  					<get ref="fgets"/>
+  					<get ref="entry"/>
+  					<sizeof>
+  						<get ref="entry"/>
+  					</sizeof>
+  					<get ref="pwfile"/>
+  				</call>
+  				<block>
+  					<var id="secret" store="auto">
+  						<ptr>
+  							<char/>
+  						</ptr>
+  						<get ref="NULL"/>
+  					</var>
+  					<set>
+  						<get ref="secret"/>
+  						<call>
+  							<get ref="strpbrk"/>
+  							<get ref="entry"/>
+  							<string>:</string>
+  						</call>
+  					</set>
+  					<if>
+  						<get ref="secret"/>
+  						<block>
+  							<set>
+  								<memof>
+  									<postinc>
+  										<get ref="secret"/>
+  									</postinc>
+  								</memof>
+  								<char> </char>
+  							</set>
+  							<set>
+  								<index>
+  									<get ref="secret"/>
+  									<sub>
+  										<call>
+  											<get ref="strlen"/>
+  											<get ref="secret"/>
+  										</call>
+  										<int>1</int>
+  									</sub>
+  								</index>
+  								<char> </char>
+  							</set>
+  							<if>
+  								<and>
+  									<eq>
+  										<call>
+  											<get ref="strcmp"/>
+  											<get ref="entry"/>
+  											<get ref="username"/>
+  										</call>
+  										<int>0</int>
+  									</eq>
+  									<eq>
+  										<call>
+  											<get ref="strcmp"/>
+  											<get ref="secret"/>
+  											<get ref="password"/>
+  										</call>
+  										<int>0</int>
+  									</eq>
+  								</and>
+  								<block>
+  									<return>
+  										<int>1</int>
+  									</return>
+  								</block>
+  								<nop/>
+  							</if>
+  						</block>
+  						<nop/>
+  					</if>
+  				</block>
+  			</while>
+  			<return>
+  				<int>0</int>
+  			</return>
+  		</body>
+  	</fundef>
+  	<fundef id="strip" store="auto">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="s" store="auto">
+  			<ptr>
+  				<char/>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="n" store="auto">
+  				<long/>
+  				<call>
+  					<get ref="strlen"/>
+  					<get ref="s"/>
+  				</call>
+  			</var>
+  			<set>
+  				<index>
+  					<get ref="s"/>
+  					<get ref="n"/>
+  				</index>
+  				<quest>
+  					<eq>
+  						<index>
+  							<get ref="s"/>
+  							<get ref="n"/>
+  						</index>
+  						<char>
+  </char>
+  					</eq>
+  					<char> </char>
+  					<index>
+  						<get ref="s"/>
+  						<get ref="n"/>
+  					</index>
+  				</quest>
+  			</set>
+  		</body>
+  	</fundef>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="argc" store="auto">
+  			<long/>
+  		</param>
+  		<param name="argv" store="auto">
+  			<ptr>
+  				<ptr>
+  					<char/>
+  				</ptr>
+  			</ptr>
+  		</param>
+  		<body>
+  			<var id="username" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<get ref="BUFSIZE"/>
+  					</size>
+  				</array>
+  			</var>
+  			<var id="password" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<get ref="BUFSIZE"/>
+  					</size>
+  				</array>
+  			</var>
+  			<if>
+  				<not>
+  					<call>
+  						<get ref="fgets"/>
+  						<get ref="username"/>
+  						<sizeof>
+  							<get ref="username"/>
+  						</sizeof>
+  						<get ref="stdin"/>
+  					</call>
+  				</not>
+  				<call>
+  					<get ref="rejected"/>
+  				</call>
+  				<nop/>
+  			</if>
+  			<if>
+  				<not>
+  					<call>
+  						<get ref="fgets"/>
+  						<get ref="password"/>
+  						<sizeof>
+  							<get ref="password"/>
+  						</sizeof>
+  						<get ref="stdin"/>
+  					</call>
+  				</not>
+  				<call>
+  					<get ref="rejected"/>
+  				</call>
+  				<nop/>
+  			</if>
+  			<call>
+  				<get ref="strip"/>
+  				<get ref="username"/>
+  			</call>
+  			<call>
+  				<get ref="strip"/>
+  				<get ref="password"/>
+  			</call>
+  			<if>
+  				<call>
+  					<get ref="authenticate"/>
+  					<get ref="username"/>
+  					<get ref="password"/>
+  				</call>
+  				<call>
+  					<get ref="accepted"/>
+  				</call>
+  				<call>
+  					<get ref="rejected"/>
+  				</call>
+  			</if>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-guess.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<if>
+  				<eq>
+  					<call>
+  						<get ref="getchar"/>
+  					</call>
+  					<char>A</char>
+  				</eq>
+  				<block>
+  					<call>
+  						<get ref="puts"/>
+  						<string>access granted</string>
+  					</call>
+  				</block>
+  				<nop/>
+  			</if>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-guess-many-tries.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<while>
+  				<int>1</int>
+  				<block>
+  					<var id="c" store="auto">
+  						<long/>
+  						<call>
+  							<get ref="getchar"/>
+  						</call>
+  					</var>
+  					<if>
+  						<eq>
+  							<get ref="c"/>
+  							<char>A</char>
+  						</eq>
+  						<block>
+  							<call>
+  								<get ref="puts"/>
+  								<string>access granted</string>
+  							</call>
+  							<return>
+  								<int>0</int>
+  							</return>
+  						</block>
+  						<nop/>
+  					</if>
+  					<if>
+  						<le>
+  							<get ref="c"/>
+  							<int>0</int>
+  						</le>
+  						<block>
+  							<return>
+  								<int>1</int>
+  							</return>
+  						</block>
+  						<nop/>
+  					</if>
+  					<if>
+  						<eq>
+  							<get ref="c"/>
+  							<char>
+  </char>
+  						</eq>
+  						<block>
+  							<continue/>
+  						</block>
+  						<nop/>
+  					</if>
+  				</block>
+  			</while>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-guess-many-tries-switch.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<while>
+  				<int>1</int>
+  				<block>
+  					<switch>
+  						<call>
+  							<get ref="getchar"/>
+  						</call>
+  						<block>
+  							<case>
+  								<bor>
+  									<neg>
+  										<int>1</int>
+  									</neg>
+  									<int>0</int>
+  								</bor>
+  								<call>
+  									<get ref="puts"/>
+  									<string>good bye!</string>
+  								</call>
+  							</case>
+  							<return>
+  								<int>1</int>
+  							</return>
+  							<case>
+  								<char>A</char>
+  								<call>
+  									<get ref="puts"/>
+  									<string>access granted</string>
+  								</call>
+  							</case>
+  							<return>
+  								<int>0</int>
+  							</return>
+  							<case>
+  								<char>
+  </char>
+  								<continue/>
+  							</case>
+  						</block>
+  					</switch>
+  				</block>
+  			</while>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-input.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="buf" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<int>16</int>
+  					</size>
+  				</array>
+  			</var>
+  			<mul>
+  				<get ref="FILE"/>
+  				<get ref="input"/>
+  			</mul>
+  			<and>
+  				<and>
+  					<and>
+  						<set>
+  							<get ref="input"/>
+  							<call>
+  								<get ref="fopen"/>
+  								<string>passwd</string>
+  								<string>r</string>
+  							</call>
+  						</set>
+  						<call>
+  							<get ref="fgets"/>
+  							<get ref="buf"/>
+  							<sizeof>
+  								<get ref="buf"/>
+  							</sizeof>
+  							<get ref="input"/>
+  						</call>
+  					</and>
+  					<eq>
+  						<call>
+  							<get ref="strncmp"/>
+  							<get ref="buf"/>
+  							<string>backdoor</string>
+  							<int>8</int>
+  						</call>
+  						<int>0</int>
+  					</eq>
+  				</and>
+  				<call>
+  					<get ref="puts"/>
+  					<string>access granted</string>
+  				</call>
+  			</and>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-palindrome.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="buf" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<int>8</int>
+  					</size>
+  				</array>
+  			</var>
+  			<if>
+  				<call>
+  					<get ref="fgets"/>
+  					<get ref="buf"/>
+  					<sizeof>
+  						<get ref="buf"/>
+  					</sizeof>
+  					<get ref="stdin"/>
+  				</call>
+  				<block>
+  					<var id="i" store="auto">
+  						<long/>
+  					</var>
+  					<var id="n" store="auto">
+  						<long/>
+  						<sub>
+  							<call>
+  								<get ref="strlen"/>
+  								<get ref="buf"/>
+  							</call>
+  							<int>1</int>
+  						</sub>
+  					</var>
+  					<for>
+  						<set>
+  							<get ref="i"/>
+  							<int>0</int>
+  						</set>
+  						<and>
+  							<and>
+  								<gt>
+  									<get ref="n"/>
+  									<int>2</int>
+  								</gt>
+  								<le>
+  									<get ref="i"/>
+  									<div>
+  										<get ref="n"/>
+  										<int>2</int>
+  									</div>
+  								</le>
+  							</and>
+  							<eq>
+  								<index>
+  									<get ref="buf"/>
+  									<get ref="i"/>
+  								</index>
+  								<index>
+  									<get ref="buf"/>
+  									<sub>
+  										<sub>
+  											<get ref="n"/>
+  											<get ref="i"/>
+  										</sub>
+  										<int>1</int>
+  									</sub>
+  								</index>
+  							</eq>
+  						</and>
+  						<postinc>
+  							<get ref="i"/>
+  						</postinc>
+  						<nop/>
+  					</for>
+  					<if>
+  						<gt>
+  							<get ref="i"/>
+  							<div>
+  								<get ref="n"/>
+  								<int>2</int>
+  							</div>
+  						</gt>
+  						<block>
+  							<call>
+  								<get ref="puts"/>
+  								<string>access granted!</string>
+  							</call>
+  						</block>
+  						<nop/>
+  					</if>
+  				</block>
+  				<nop/>
+  			</if>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml symexec-simple.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="buf" store="auto">
+  				<array>
+  					<char/>
+  					<size>
+  						<int>16</int>
+  					</size>
+  				</array>
+  			</var>
+  			<var id="bytes_read" store="auto">
+  				<long/>
+  				<call>
+  					<get ref="read"/>
+  					<int>0</int>
+  					<get ref="buf"/>
+  					<sub>
+  						<sizeof>
+  							<get ref="buf"/>
+  						</sizeof>
+  						<int>1</int>
+  					</sub>
+  				</call>
+  			</var>
+  			<if>
+  				<ne>
+  					<get ref="bytes_read"/>
+  					<neg>
+  						<int>1</int>
+  					</neg>
+  				</ne>
+  				<block>
+  					<set>
+  						<index>
+  							<get ref="buf"/>
+  							<get ref="bytes_read"/>
+  						</index>
+  						<int>0</int>
+  					</set>
+  					<if>
+  						<eq>
+  							<call>
+  								<get ref="strcmp"/>
+  								<get ref="buf"/>
+  								<string>backdoor</string>
+  							</call>
+  							<int>0</int>
+  						</eq>
+  						<block>
+  							<call>
+  								<get ref="puts"/>
+  								<string>access granted!</string>
+  							</call>
+  						</block>
+  						<nop/>
+  					</if>
+  				</block>
+  				<nop/>
+  			</if>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml trivial.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<param name="argc" store="auto">
+  			<long/>
+  		</param>
+  		<param name="argv" store="auto">
+  			<array>
+  				<ptr>
+  					<const>
+  						<char/>
+  					</const>
+  				</ptr>
+  				<size>
+  					<nothing/>
+  				</size>
+  			</array>
+  		</param>
+  		<body>
+  			<var id="i" store="auto">
+  				<long/>
+  			</var>
+  			<for>
+  				<set>
+  					<get ref="i"/>
+  					<int>0</int>
+  				</set>
+  				<lt>
+  					<get ref="i"/>
+  					<get ref="argc"/>
+  				</lt>
+  				<postinc>
+  					<get ref="i"/>
+  				</postinc>
+  				<block>
+  					<call>
+  						<get ref="puts"/>
+  						<index>
+  							<get ref="argv"/>
+  							<get ref="i"/>
+  						</index>
+  					</call>
+  				</block>
+  			</for>
+  			<call>
+  				<get ref="abort"/>
+  			</call>
+  		</body>
+  	</fundef>
+  </file>
+
+  $ ctoxml anonymous-structs.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<struct id="struct:Scope">
+  		<field name="">
+  			<union>
+  				<field name="num">
+  					<long/>
+  				</field>
+  				<field name="alpha">
+  					<char/>
+  				</field>
+  			</union>
+  		</field>
+  	</struct>
+  	<struct id="struct:Scope2">
+  		<field name="">
+  			<struct>
+  				<field name="num">
+  					<long/>
+  				</field>
+  				<field name="alpha">
+  					<char/>
+  				</field>
+  			</struct>
+  		</field>
+  	</struct>
+  </file>
+
+  $ ctoxml atomic_parenthesis.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<var id="_Atomic" store="auto">
+  		<fun>
+  			<vararg/>
+  		</fun>
+  	</var>
+  </file>
+  $ ctoxml dangling_else.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="f" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<if>
+  				<int>0</int>
+  				<if>
+  					<int>1</int>
+  					<return>
+  						<int>1</int>
+  					</return>
+  					<return>
+  						<int>0</int>
+  					</return>
+  				</if>
+  				<nop/>
+  			</if>
+  			<return>
+  				<int>1</int>
+  			</return>
+  		</body>
+  	</fundef>
+  </file>
+  $ ctoxml enum.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<type id="foo" store="auto">
+  		<enum>
+  			<value name="a">
+  				<nothing/>
+  			</value>
+  			<value name="b">
+  				<get ref="a"/>
+  			</value>
+  		</enum>
+  	</type>
+  </file>
+  $ ctoxml struct-recursion.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<struct id="struct:s1">
+  		<field name="A">
+  			<ptr>
+  				<struct ref="struct:s2"/>
+  			</ptr>
+  		</field>
+  	</struct>
+  	<struct id="struct:s2">
+  		<field name="B">
+  			<ptr>
+  				<struct ref="struct:s1"/>
+  			</ptr>
+  		</field>
+  	</struct>
+  	<var id="a" store="auto">
+  		<struct ref="struct:s1"/>
+  	</var>
+  	<var id="b" store="auto">
+  		<struct ref="struct:s2"/>
+  	</var>
+  </file>
