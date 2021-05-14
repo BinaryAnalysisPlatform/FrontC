@@ -5331,3 +5331,57 @@
   		<struct ref="struct:s2"/>
   	</var>
   </file>
+  $ ctoxml c99-struct-initializers.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<struct id="struct:point">
+  		<field name="y">
+  			<long/>
+  		</field>
+  		<field name="x">
+  			<long/>
+  		</field>
+  	</struct>
+  	<struct id="struct:point3d">
+  		<field name="z">
+  			<long/>
+  		</field>
+  		<field name="y">
+  			<long/>
+  		</field>
+  		<field name="x">
+  			<long/>
+  		</field>
+  	</struct>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="p" store="auto">
+  				<struct ref="struct:point"/>
+  				<compound>
+  					<designated name="y">
+  						<int>2</int>
+  					</designated>
+  					<designated name="x">
+  						<int>1</int>
+  					</designated>
+  				</compound>
+  			</var>
+  			<var id="p2" store="auto">
+  				<struct ref="struct:point3d"/>
+  				<compound>
+  					<designated name="z">
+  						<int>2</int>
+  					</designated>
+  					<designated name="x">
+  						<int>1</int>
+  					</designated>
+  					<int>5</int>
+  				</compound>
+  			</var>
+  			<nop/>
+  		</body>
+  	</fundef>
+  </file>
