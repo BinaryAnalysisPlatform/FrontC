@@ -780,7 +780,7 @@ enum_name: IDENT      {($1, NOTHING)}
 
 /*** Expressions ****/
 init_expression:
-LBRACE init_comma_expression RBRACE
+LBRACE compound_comma_expression RBRACE
     {CONSTANT (CONST_COMPOUND (List.rev $2))}
   |  expression
     {$1}
@@ -791,6 +791,22 @@ init_expression
   |  init_comma_expression COMMA init_expression
     {$3::$1}
   |  init_comma_expression COMMA
+    {$1}
+;
+compound_expression:
+LBRACE compound_comma_expression RBRACE
+    {CONSTANT (CONST_COMPOUND (List.rev $2))}
+  |  expression
+    {$1}
+  | DOT type_name EQ expression
+    { DESIGNATED ($2, $4) }
+;
+compound_comma_expression:
+compound_expression
+    {[$1]}
+  |  compound_comma_expression COMMA compound_expression
+    {$3::$1}
+  |  compound_comma_expression COMMA
     {$1}
 ;
 opt_expression:

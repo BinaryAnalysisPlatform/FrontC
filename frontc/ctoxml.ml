@@ -115,6 +115,8 @@ and convert_exp exp =
     Cxml.new_elt "memberofptr" [("field", n)] [convert_exp b]
   | GNU_BODY (d, s) ->
     Cxml.new_elt "body" [] (convert_block (d, s))
+  | DESIGNATED (n, e) ->
+    Cxml.new_elt "designated" [("name", n)] [convert_exp e]
   | EXPR_LINE (expr, file, line) ->
     Cxml.new_elt "expr_line"
       [("file", file); ("line", string_of_int line)]

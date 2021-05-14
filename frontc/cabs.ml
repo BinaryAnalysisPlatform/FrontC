@@ -229,6 +229,8 @@ and expression =
   (** Pointer indirection through "->". *)
   | GNU_BODY of body
   (** GNU braces inside an expression. *)
+  | DESIGNATED of string * expression
+  (** Designated initialization, in compound constants only. *)
   | EXPR_LINE of expression * string * int
   (** Record the file and line of the expression. *)
 

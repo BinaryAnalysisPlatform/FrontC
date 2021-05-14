@@ -337,7 +337,7 @@ and print_old_params pars ell =
 (*
 ** Expression printing
 **		Priorities
-**		16	varaibles
+**		16	variables
 **		15	. -> [] call()
 **		14  ++, -- (post)
 **		13	++ -- (pre) ~ ! - + & *(cast)
@@ -413,6 +413,7 @@ and get_operator exp =
   | MEMBEROF _ -> ("", 15)
   | MEMBEROFPTR _ -> ("", 15)
   | GNU_BODY _ -> ("", 17)
+  | DESIGNATED _ -> ("", 15)
   | EXPR_LINE (expr, _, _) -> get_operator expr
 
 and print_comma_exps exps =
@@ -487,6 +488,11 @@ and print_expression (exp : expression) (lvl : int) =
       print "(";
       print_statement (BLOCK (decs, stat));
       print ")"
+    | DESIGNATED (member, exp) ->
+      print ".";
+      print member;
+      print "=";
+      print_expression exp 16;
     | EXPR_LINE (expr, _, _) ->
       print_expression expr lvl in
   if lvl > lvl' then print ")" else ()
