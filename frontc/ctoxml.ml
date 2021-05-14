@@ -258,6 +258,10 @@ and convert_type _type =
   | FLOAT true
   | DOUBLE false -> base_type "double"
   | DOUBLE true -> base_type "ldouble"
+  | COMPLEX_FLOAT -> base_type "cfloat"
+  | COMPLEX_DOUBLE -> base_type "cdouble"
+  | COMPLEX_LONG_DOUBLE -> base_type "cldouble"
+  | BUILTIN_TYPE t -> base_type t
 
   | PTR _type -> Cxml.new_elt "ptr" [] [convert_type _type]
   | CONST _type -> Cxml.new_elt "const" [] [convert_type _type]

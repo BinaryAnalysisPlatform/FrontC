@@ -16,6 +16,7 @@
     | BASE_STORAGE of storage
     | BASE_VOLATILE
     | BASE_CONST
+    | BASE_COMPLEX
     | BASE_GNU_ATTR of Cabs.gnu_attrs
 
     let apply_mod (typ, sto) modi =
@@ -30,6 +31,9 @@
         | (BITFIELD (NO_SIGN, exp), BASE_SIGN sign) -> BITFIELD (sign, exp)
         | (FLOAT false, BASE_SIZE LONG) -> FLOAT true
         | (DOUBLE false, BASE_SIZE LONG) -> DOUBLE true
+        | (FLOAT false, BASE_COMPLEX) -> COMPLEX_FLOAT
+        | (DOUBLE false, BASE_COMPLEX) -> COMPLEX_DOUBLE
+        | (DOUBLE true, BASE_COMPLEX) -> COMPLEX_LONG_DOUBLE
         | (PTR typ, _) -> PTR (mod_root typ)
         | (CONST typ, _) -> CONST (mod_root typ)
         | (VOLATILE typ, _) -> VOLATILE (mod_root typ)
@@ -41,8 +45,7 @@
           PROTO _ | OLD_PROTO _ -> false
           | _ -> true in
       match modi with
-        BASE_SIGN _ -> (mod_root typ, sto)
-      | BASE_SIZE _ -> (mod_root typ, sto)
+      | BASE_SIGN _ | BASE_SIZE _ | BASE_COMPLEX -> (mod_root typ, sto)
       | BASE_CONST ->
          if (check_access typ) then (CONST typ, sto)
          else raise BadModifier
@@ -177,7 +180,7 @@ AND_EQ PIPE_EQ CIRC_EQ INF_INF_EQ SUP_SUP_EQ
 %type <Cabs.statement> statement opt_stats stats
 %type <Cabs.constant> constant
 %type <Cabs.expression> expression init_expression opt_expression
-%type <Cabs.expression list> comma_expression init_comma_expression
+%type <Cabs.expression list> comma_expression
 %type <Cabs.single_name list * bool> parameters
 %type <string> string_list
 
@@ -727,12 +730,14 @@ qual_type:
   |  VOID       {(VOID, [])}
   |  CHAR       {(CHAR NO_SIGN, [])}
   |  INT        {(INT (NO_SIZE, NO_SIGN), [])}
-  |  FLOAT       {(FLOAT false, [])}
-  |  DOUBLE       {(DOUBLE false, [])}
+  |  FLOAT      {(FLOAT false, [])}
+  |  DOUBLE     {(DOUBLE false, [])}
+  |  BUILTIN_TYPE {(BUILTIN_TYPE $1, [])}
+  |  COMPLEX    {(NO_TYPE, [BASE_COMPLEX])}
   |  LONG       {(NO_TYPE, [BASE_SIZE LONG])}
-  |  SHORT       {(NO_TYPE, [BASE_SIZE SHORT])}
-  |  SIGNED       {(NO_TYPE, [BASE_SIGN SIGNED])}
-  |  UNSIGNED      {(NO_TYPE, [BASE_SIGN UNSIGNED])}
+  |  SHORT      {(NO_TYPE, [BASE_SIZE SHORT])}
+  |  SIGNED     {(NO_TYPE, [BASE_SIGN SIGNED])}
+  |  UNSIGNED   {(NO_TYPE, [BASE_SIGN UNSIGNED])}
 ;
 comp_type:
   | struct_type {$1}
@@ -785,14 +790,7 @@ LBRACE compound_comma_expression RBRACE
   |  expression
     {$1}
 ;
-init_comma_expression:
-init_expression
-    {[$1]}
-  |  init_comma_expression COMMA init_expression
-    {$3::$1}
-  |  init_comma_expression COMMA
-    {$1}
-;
+
 compound_expression:
 LBRACE compound_comma_expression RBRACE
     {CONSTANT (CONST_COMPOUND (List.rev $2))}
@@ -822,13 +820,14 @@ expression
     {$3::$1}
 ;
 expression:
-constant
-    {CONSTANT $1}
+  | LPAREN EXTENSION expression RPAREN {$3}
+  | constant
+   {CONSTANT $1}
   |  IDENT
     {VARIABLE $1}
   |  SIZEOF expression
     {EXPR_SIZEOF $2}
-  |   SIZEOF LPAREN only_type RPAREN
+  | SIZEOF LPAREN only_type RPAREN
     {TYPE_SIZEOF $3}
   |  PLUS expression
     {UNARY (PLUS, $2)}

@@ -34,14 +34,17 @@ and storage =
 
 (** Base type *)
 and base_type =
-    NO_TYPE    (** Old K&R declaration without type *)
+  | NO_TYPE    (** Old K&R declaration without type *)
   | VOID     (** "void" type *)
   | CHAR of sign   (** "char" type with sign modifier *)
   | INT of size * sign (** "int" type with size and sign modifiers *)
   | BITFIELD of sign * expression
   (** Bitfield with sign modifier and size expression *)
   | FLOAT of bool    (** "float" type with long (true) modifier *)
-  | DOUBLE of bool   (** "doubl" type with long (true) modifier *)
+  | DOUBLE of bool   (** "double" type with long (true) modifier *)
+  | COMPLEX_FLOAT    (** float complex *)
+  | COMPLEX_DOUBLE   (** double complex *)
+  | COMPLEX_LONG_DOUBLE         (** long double complex *)
   | PTR of base_type   (** Pointer "*" to the given type *)
   | RESTRICT_PTR of base_type (** REstricted pointer "*" to the given type. *)
   | ARRAY of base_type * expression
@@ -60,8 +63,11 @@ and base_type =
   | VOLATILE of base_type
   (** "volatile" modifier *)
   | GNU_TYPE of gnu_attrs * base_type
-  (** Not a type, just to record the file/line of an identifier. *)
+  (** a type annotated with GNU attributes *)
+  | BUILTIN_TYPE of string
+  (** a machine-specific or complier-specific builtin type  *)
   | TYPE_LINE of string * int * base_type
+  (** Not a type, just to record the file/line of an identifier. *)
 
 (** A name in a declaration with identifier, full type, GNU attributes and
  * initialization expression. *)
