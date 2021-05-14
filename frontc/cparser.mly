@@ -519,11 +519,19 @@ field:
      | [],r -> r
      | attrs,(t,s,ns) -> GNU_TYPE (attrs,t),s,ns
    }
+  | field_mod_list_opt struct_type field_mod_list_opt field_defs SEMICOLON
+    { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) (List.rev $4)}
+  | field_mod_list_opt struct_type field_mod_list_opt SEMICOLON
+    { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) [("", NO_TYPE, [], NOTHING)]}
+  | field_mod_list_opt union_type field_mod_list_opt field_defs SEMICOLON
+    { set_name_group (apply_mods $1 (apply_mods $3 ($2, NO_STORAGE))) (List.rev $4) }
+  | field_mod_list_opt union_type field_mod_list_opt SEMICOLON
+    { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) [("", NO_TYPE, [], NOTHING)]}
 ;
 field_type:
 field_mod_list_opt field_qual
     {apply_mods (snd $2) (apply_mods $1 ((fst $2), NO_STORAGE))}
-  | field_mod_list_opt comp_type field_mod_list_opt
+  | field_mod_list_opt enum_type field_mod_list_opt
     {apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))}
   | field_mod_list_opt NAMED_TYPE field_mod_list_opt
     {apply_mods $3 (apply_mods $1 (NAMED_TYPE $2, NO_STORAGE))}
@@ -727,18 +735,28 @@ qual_type:
   |  UNSIGNED      {(NO_TYPE, [BASE_SIGN UNSIGNED])}
 ;
 comp_type:
+  | struct_type {$1}
+  | union_type {$1}
+  | enum_type {$1}
+;
+
+struct_type:
 STRUCT type_name
     {STRUCT ($2, [])}
   |  STRUCT LBRACE field_list RBRACE
     {STRUCT ("", List.rev $3)}
   |  STRUCT type_name LBRACE field_list RBRACE
     {STRUCT ($2, List.rev $4)}
+;
+union_type:
   |  UNION type_name
     {UNION ($2, [])}
   |  UNION LBRACE field_list RBRACE
     {UNION ("", List.rev $3)}
   |  UNION type_name LBRACE field_list RBRACE
     {UNION ($2, List.rev $4)}
+;
+enum_type:
   |  ENUM type_name
     {ENUM ($2, [])}
   |  ENUM LBRACE enum_list RBRACE
