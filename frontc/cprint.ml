@@ -163,6 +163,9 @@ let rec print_base_type typ =
   | BITFIELD (sign, _) -> print ((get_sign sign) ^ "int")
   | FLOAT size -> print ((if size then "long " else "") ^ "float")
   | DOUBLE size -> print ((if size then "long " else "") ^ "double")
+  | COMPLEX_FLOAT -> print "float _Complex"
+  | COMPLEX_DOUBLE -> print "double _Complex"
+  | COMPLEX_LONG_DOUBLE -> print "long double _Complex"
   | NAMED_TYPE id -> print id
   | ENUM (id, items) -> print_enum id items
   | STRUCT (id, flds) -> print_fields ("struct " ^ id) flds
@@ -175,6 +178,7 @@ let rec print_base_type typ =
   | CONST typ -> print_base_type typ
   | VOLATILE typ -> print_base_type typ
   | GNU_TYPE (attrs, typ) ->  print_attributes attrs; print_base_type typ
+  | BUILTIN_TYPE t -> print t
   | TYPE_LINE (_, _, _type) -> print_base_type _type
 
 and print_fields id (flds : name_group list) =

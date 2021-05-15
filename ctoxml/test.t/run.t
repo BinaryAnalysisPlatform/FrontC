@@ -5385,3 +5385,65 @@
   		</body>
   	</fundef>
   </file>
+
+  $ ctoxml complex-pre.c
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="main" store="auto">
+  		<type>
+  			<long/>
+  		</type>
+  		<body>
+  			<var id="z1" store="auto">
+  				<cdouble/>
+  				<add>
+  					<float>0.0</float>
+  					<mul>
+  						<call>
+  							<get ref="__builtin_inff"/>
+  						</call>
+  						<get ref="_Imaginary_I"/>
+  					</mul>
+  				</add>
+  			</var>
+  			<var id="z2" store="auto">
+  				<cdouble/>
+  				<add>
+  					<float>0.0</float>
+  					<mul>
+  						<call>
+  							<get ref="__builtin_inff"/>
+  						</call>
+  						<float>1.0iF</float>
+  					</mul>
+  				</add>
+  			</var>
+  			<call>
+  				<get ref="printf"/>
+  				<string>z1 = %.1f%+.1fi
+  </string>
+  				<call>
+  					<get ref="creal"/>
+  					<get ref="z1"/>
+  				</call>
+  				<call>
+  					<get ref="cimag"/>
+  					<get ref="z1"/>
+  				</call>
+  			</call>
+  			<call>
+  				<get ref="printf"/>
+  				<string>z2 = %.1f%+.1fi
+  </string>
+  				<call>
+  					<get ref="creal"/>
+  					<get ref="z2"/>
+  				</call>
+  				<call>
+  					<get ref="cimag"/>
+  					<get ref="z2"/>
+  				</call>
+  			</call>
+  		</body>
+  	</fundef>
+  </file>
