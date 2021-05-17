@@ -61,6 +61,9 @@
     let apply_mods mods fty =
       List.fold_left apply_mod fty mods
 
+    let apply_mods_to_base_type mods bty =
+      fst@@apply_mods mods (bty,NO_STORAGE)
+
     let set_type tst tin =
       let rec set typ =
         match typ with
@@ -342,7 +345,7 @@ old_mods_opt:
   |  REGISTER      {[BASE_STORAGE REGISTER]}
 ;
 old_qual:
-qual_type      {$1}
+  |  qual_type      {$1}
   |  old_qual qual_type    {apply_qual $1 $2}
   |  old_qual CONST     {(fst $1, BASE_CONST::(snd $1))}
   |  old_qual REGISTER    {(fst $1, (BASE_STORAGE REGISTER)::(snd $1))}
@@ -408,18 +411,18 @@ STATIC       { BASE_STORAGE STATIC }
   |  gcc_attribute     { BASE_GNU_ATTR $1 }
 ;
 local_qual:
-qual_type      {$1}
+  |  qual_type      {$1}
   |  local_qual qual_type   {apply_qual $1 $2}
   |  local_qual local_mod   {(fst $1, $2::(snd $1))}
 ;
 local_defs:
-local_def      {[$1]}
+  |  local_def      {[$1]}
   |  local_defs COMMA local_def  {$3::$1}
 ;
 local_def:
-local_dec opt_gcc_attributes
+  | local_dec opt_gcc_attributes
     {(fst $1, snd $1, $2, NOTHING)}
-  |  local_dec opt_gcc_attributes EQ init_expression
+  | local_dec opt_gcc_attributes EQ init_expression
     {(fst $1, snd $1, $2, $4)}
 ;
 local_dec:
@@ -656,10 +659,10 @@ param_dec:
     {(fst $3, set_type (VOLATILE (PTR NO_TYPE)) (snd $3))}
   |  STAR gcc_attributes param_dec
     {(fst $3, set_type (GNU_TYPE ($2, PTR NO_TYPE)) (snd $3))}
-  |  param_dec LBRACKET comma_expression RBRACKET
-    {(fst $1, set_type (ARRAY (NO_TYPE, smooth_expression $3)) (snd $1))}
-  |  param_dec LBRACKET RBRACKET
-    {(fst $1, set_type (ARRAY (NO_TYPE, NOTHING)) (snd $1))}
+  |  param_dec LBRACKET global_mod_list_opt comma_expression RBRACKET
+    {(fst $1, apply_mods_to_base_type $3 @@ set_type (ARRAY (NO_TYPE, smooth_expression $4)) (snd $1))}
+  |  param_dec LBRACKET global_mod_list_opt RBRACKET
+    {(fst $1, apply_mods_to_base_type $3 @@ set_type (ARRAY (NO_TYPE, NOTHING)) (snd $1))}
   |  LPAREN param_dec RPAREN LPAREN parameters RPAREN
     {(fst $2, set_type (PROTO (NO_TYPE, fst $5, snd $5)) (snd $2))}
   |  LPAREN param_dec RPAREN

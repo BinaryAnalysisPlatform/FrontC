@@ -5447,3 +5447,52 @@
   		</body>
   	</fundef>
   </file>
+
+  $ echo 'void fn(char xs[const static volatile]) {}' | dune exec ctoxml --
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="fn" store="auto">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="xs" store="auto">
+  			<volatile>
+  				<const>
+  					<array>
+  						<char/>
+  						<size>
+  							<nothing/>
+  						</size>
+  					</array>
+  				</const>
+  			</volatile>
+  		</param>
+  		<body>
+  			<nop/>
+  		</body>
+  	</fundef>
+  </file>
+  $ echo 'void fn(char xs[const static volatile 10]) {}' | dune exec ctoxml --
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<fundef id="fn" store="auto">
+  		<type>
+  			<void/>
+  		</type>
+  		<param name="xs" store="auto">
+  			<volatile>
+  				<const>
+  					<array>
+  						<char/>
+  						<size>
+  							<int>10</int>
+  						</size>
+  					</array>
+  				</const>
+  			</volatile>
+  		</param>
+  		<body>
+  			<nop/>
+  		</body>
+  	</fundef>
+  </file>
