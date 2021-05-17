@@ -153,6 +153,7 @@ let keywords =
     ("__restrict", id RESTRICT);
     ("restrict", id RESTRICT);
     ("char", id CHAR);
+    ("_Bool", id BOOL);
     ("int", id INT);
     ("float", id FLOAT);
     ("double", id DOUBLE);

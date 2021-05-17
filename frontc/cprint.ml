@@ -158,6 +158,7 @@ let rec print_base_type typ =
   match typ with
     NO_TYPE -> ()
   | VOID -> print "void"
+  | BOOL -> print "_Bool"
   | CHAR sign -> print ((get_sign sign) ^ "char")
   | INT (size, sign) -> print ((get_sign sign) ^ (get_size size) ^ "int")
   | BITFIELD (sign, _) -> print ((get_sign sign) ^ "int")
