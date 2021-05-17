@@ -589,8 +589,8 @@ field_dec:
     {(fst $2, set_type (PROTO (NO_TYPE, fst $5, snd $5)) (snd $2))}
   |  LPAREN field_dec RPAREN
     {$2}
-  |  IDENT COLON expression
-    {($1, BITFIELD (NO_SIGN, $3))}
+  |  IDENT? COLON expression
+    {((match $1 with None -> "" | Some x -> x), BITFIELD (NO_SIGN, $3))}
 ;
 
 
