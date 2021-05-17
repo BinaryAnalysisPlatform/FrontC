@@ -731,6 +731,7 @@ only_dec:
 /*** Base type ***/
 qual_type:
   |  VOID       {(VOID, [])}
+  |  BOOL       {(BOOL, [])}
   |  CHAR       {(CHAR NO_SIGN, [])}
   |  INT        {(INT (NO_SIZE, NO_SIGN), [])}
   |  FLOAT      {(FLOAT false, [])}

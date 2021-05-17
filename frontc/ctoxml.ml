@@ -235,6 +235,7 @@ and convert_type _type =
   let base_type name = Cxml.new_elt name [] [] in
   match _type with
     NO_TYPE -> convert_type (INT (NO_SIZE, NO_SIGN))
+  | BOOL -> base_type "bool"
   | VOID -> base_type "void"
   | CHAR NO_SIGN
   | CHAR SIGNED -> base_type "char"

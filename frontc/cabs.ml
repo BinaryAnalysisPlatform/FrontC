@@ -36,6 +36,7 @@ and storage =
 and base_type =
   | NO_TYPE    (** Old K&R declaration without type *)
   | VOID     (** "void" type *)
+  | BOOL     (** C99 boolean (_Bool) type  *)
   | CHAR of sign   (** "char" type with sign modifier *)
   | INT of size * sign (** "int" type with size and sign modifiers *)
   | BITFIELD of sign * expression
