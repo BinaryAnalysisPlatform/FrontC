@@ -3866,7 +3866,7 @@
   	</fundec>
   </file>
 
-  $ echo 'struct foo {int x;};' | dune exec ctoxml
+  $ echo 'struct foo {int x;};' | ctoxml
   <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
   <file>
   	<struct id="struct:foo">
@@ -3889,7 +3889,7 @@
   	</fundec>
   </file>
 
-  $ echo 'const volatile int n;' | dune exec ctoxml
+  $ echo 'const volatile int n;' | ctoxml
   <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
   <file>
   	<var id="n" store="auto">
@@ -5448,7 +5448,7 @@
   	</fundef>
   </file>
 
-  $ echo 'void fn(char xs[const static volatile]) {}' | dune exec ctoxml --
+  $ echo 'void fn(char xs[const static volatile]) {}' | ctoxml --
   <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
   <file>
   	<fundef id="fn" store="auto">
@@ -5472,7 +5472,7 @@
   		</body>
   	</fundef>
   </file>
-  $ echo 'void fn(char xs[const static volatile 10]) {}' | dune exec ctoxml --
+  $ echo 'void fn(char xs[const static volatile 10]) {}' | ctoxml
   <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
   <file>
   	<fundef id="fn" store="auto">
@@ -5495,4 +5495,16 @@
   			<nop/>
   		</body>
   	</fundef>
+  </file>
+
+  $ echo 'struct s {int : 32;};' | ctoxml
+  <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
+  <file>
+  	<struct id="struct:s">
+  		<field name="">
+  			<bits>
+  				<int>32</int>
+  			</bits>
+  		</field>
+  	</struct>
   </file>
