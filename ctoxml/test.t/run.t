@@ -5234,11 +5234,11 @@
   	<struct id="struct:Scope">
   		<field name="">
   			<union>
-  				<field name="num">
-  					<long/>
-  				</field>
   				<field name="alpha">
   					<char/>
+  				</field>
+  				<field name="num">
+  					<long/>
   				</field>
   			</union>
   		</field>
@@ -5246,11 +5246,11 @@
   	<struct id="struct:Scope2">
   		<field name="">
   			<struct>
-  				<field name="num">
-  					<long/>
-  				</field>
   				<field name="alpha">
   					<char/>
+  				</field>
+  				<field name="num">
+  					<long/>
   				</field>
   			</struct>
   		</field>
@@ -5335,21 +5335,21 @@
   <?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>
   <file>
   	<struct id="struct:point">
-  		<field name="y">
+  		<field name="x">
   			<long/>
   		</field>
-  		<field name="x">
+  		<field name="y">
   			<long/>
   		</field>
   	</struct>
   	<struct id="struct:point3d">
-  		<field name="z">
+  		<field name="x">
   			<long/>
   		</field>
   		<field name="y">
   			<long/>
   		</field>
-  		<field name="x">
+  		<field name="z">
   			<long/>
   		</field>
   	</struct>

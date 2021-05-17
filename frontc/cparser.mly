@@ -521,16 +521,16 @@ field_list: field* {$1};
 field:
   | field_type field_defs opt_gcc_attributes SEMICOLON
    {
-     match $3, set_name_group $1 (List.rev $2) with
+     match $3, set_name_group $1 $2 with
      | [],r -> r
      | attrs,(t,s,ns) -> GNU_TYPE (attrs,t),s,ns
    }
   | field_mod_list_opt struct_type field_mod_list_opt field_defs SEMICOLON
-    { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) (List.rev $4)}
+    { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) $4}
   | field_mod_list_opt struct_type field_mod_list_opt SEMICOLON
     { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) [("", NO_TYPE, [], NOTHING)]}
   | field_mod_list_opt union_type field_mod_list_opt field_defs SEMICOLON
-    { set_name_group (apply_mods $1 (apply_mods $3 ($2, NO_STORAGE))) (List.rev $4) }
+    { set_name_group (apply_mods $1 (apply_mods $3 ($2, NO_STORAGE))) $4 }
   | field_mod_list_opt union_type field_mod_list_opt SEMICOLON
     { set_name_group (apply_mods $3 (apply_mods $1 ($2, NO_STORAGE))) [("", NO_TYPE, [], NOTHING)]}
 ;
@@ -753,17 +753,17 @@ struct_type:
 STRUCT type_name
     {STRUCT ($2, [])}
   |  STRUCT LBRACE field_list RBRACE
-    {STRUCT ("", List.rev $3)}
+    {STRUCT ("", $3)}
   |  STRUCT type_name LBRACE field_list RBRACE
-    {STRUCT ($2, List.rev $4)}
+    {STRUCT ($2, $4)}
 ;
 union_type:
   |  UNION type_name
     {UNION ($2, [])}
   |  UNION LBRACE field_list RBRACE
-    {UNION ("", List.rev $3)}
+    {UNION ("", $3)}
   |  UNION type_name LBRACE field_list RBRACE
-    {UNION ($2, List.rev $4)}
+    {UNION ($2, $4)}
 ;
 enum_type:
   |  ENUM type_name
@@ -779,7 +779,8 @@ type_name:
 IDENT       {$1}
   |  NAMED_TYPE      {$1}
 ;
-enum_list: enum_name     {[$1]}
+enum_list:
+  |  enum_name     {[$1]}
   |  enum_list COMMA enum_name {$3::$1}
 ;
 enum_name: IDENT      {($1, NOTHING)}
@@ -1085,7 +1086,7 @@ gnu_arg:
   | constant
     { GNU_CST $1 }
   | gnu_id LPAREN opt_gnu_args RPAREN
-    { GNU_CALL ($1, List.rev $3) }
+    { GNU_CALL ($1, $3) }
 ;
 
 gnu_id:
