@@ -10,8 +10,8 @@ open Frontc
 
 (* Options *)
 let banner =
-  "printc V4.0\n" ^
-  "Copyright (c) 2007, Hugues Cassé <hugues.casse@laposte.net> et al.\n\n" ^
+  "printc v4.1\n" ^
+  "Copyright (c) 2007-2021, Hugues Cassé <hugues.casse@laposte.net> et al.\n\n" ^
   "SYNTAX:\tprintc [options] files...\n" ^
   "\tprintc [options] --\n"
 let args: parsing_arg list ref = ref []

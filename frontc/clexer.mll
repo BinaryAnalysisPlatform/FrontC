@@ -2,23 +2,8 @@
  **
  ** Project: FrontC
  ** File: frontc.mll
- ** Version: 1.0e
- ** Date: 9.1.99
- ** Author: Hugues Cassé
- **
- ** 1.0 3.22.99 Hugues Cassé First version.
- ** a 4.19.99 Hugues Cassé Now accept floating notation `<int part>.'.
- ** b 4.26.99 Hugues Cassé Correctly handle the # <lineno> <file> ...
- **        directive. Previous bug was taking last
- **        integer of the line as line number.
- ** c 6.4.99 Hugues Cassé Added context handling to manage local variables
- **        and type definition with the same name.
- ** d 8.26.99 Hugues Cassé Now, manage escape sequences in string and
- **        characters.
- ** e 9.1.99 Hugues Cassé Fix, '\0' now recognized.
- ** f 10.8.99 Hugues Cassé Understand "__const" GCC.
- ** 1.1 04.150.05 Hugues Cassé Added support for __XXX__ GNU attributes.
- **        Added "restrict" keyword.
+ ** Version: 4.1
+ ** Author: Hugues Cassé et al
 *)
 {
 open Ctokens

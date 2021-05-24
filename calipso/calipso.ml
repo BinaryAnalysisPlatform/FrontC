@@ -2,7 +2,7 @@ exception ParsingError
 
 
 (* Useful Data *)
-let version = "Calipso V4.0 Hugues Cassé."
+let version = "Calipso v4.1 Hugues Cassé."
 let help = version ^ "\n" ^ "calipso [-hmPtsVv] [-r[bcfgkrs]] [-s[lrw]] [-p preprocessor] <file list> [-o <output file>]"
 exception InternalError
 
