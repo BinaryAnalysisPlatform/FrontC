@@ -64,7 +64,7 @@ let display_stats _ =
 
 
 (* Useful Data *)
-let version = "stat V4.0 Hugues Cassé et al."
+let version = "stat v4.1 Hugues Cassé et al."
 let help = version ^ "\n" ^ "stat [-hPtVv] [-r[bcfgkrs]] [-p preprocessor] <file list>"
 exception InternalError
 
