@@ -13,7 +13,7 @@ It provides also an XML back-end making easier to transform the C program using 
 ctoxml
 ======
 
-The `ctoxml` package provides a
+The `ctoxml` package provides a `ctoxml` binary that translates a C binary into its XML representation. 
 
 calipso
 =======
