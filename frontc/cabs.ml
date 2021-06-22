@@ -1,6 +1,6 @@
 (* cabs -- abstract syntax for FrontC *)
 
-let version = "Cabs 4.0 Hugues Cassé et al."
+let version = "Cabs 4.0 Hugues Cassï¿½ et al."
 exception BadModifier
 exception BadType
 
@@ -16,12 +16,14 @@ type size =
   | SHORT   (** "short" modifier *)
   | LONG   (** "long" modifier *)
   | LONG_LONG  (** GNU "long long" modifier *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Signess of int and bitfields *)
 and sign =
     NO_SIGN  (** No sign modifier *)
   | SIGNED  (** "signed" modifier *)
   | UNSIGNED  (** "unsigned" modifier *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Storage of names *)
 and storage =
@@ -30,6 +32,7 @@ and storage =
   | STATIC  (** "static" modifier *)
   | EXTERN  (** "extern" modifier *)
   | REGISTER  (** "register" modifier *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 
 (** Base type *)
@@ -69,28 +72,35 @@ and base_type =
   (** a machine-specific or complier-specific builtin type  *)
   | TYPE_LINE of string * int * base_type
   (** Not a type, just to record the file/line of an identifier. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** A name in a declaration with identifier, full type, GNU attributes and
  * initialization expression. *)
 and name = string * base_type * gnu_attrs * expression
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** A name group, that is, a simple type following by many name
  * declaration as [int v, *p, t\[256\];]. *)
 and name_group = base_type * storage * name list
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** A single name, as above, but with only one declaration. *)
 and single_name = base_type * storage * name
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Definition of an enumerated value. *)
 and enum_item = string * expression
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Prototype of a function with return type, function declaration and
  * variable argument "..." boolean. *)
 and proto = base_type * single_name list * bool
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Old-C K&R function prototype with root type, list of arguments and
  * variable argument "..." boolean. *)
 and old_proto = base_type * string list * bool
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 
 (** Definitions found in a C file. *)
@@ -105,14 +115,17 @@ and definition =
   (** Definition of a typedef. *)
   | ONLYTYPEDEF of name_group
   (** Definition of lonely "struct", "union" or "enum". *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** A C files is composed of C definitions *)
 and file = definition list
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 
 (** The body of a function is composed as a list of variable declaration
  * and of a statement. *)
 and body = definition list * statement
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 
 (** Statement changes the flow of control. *)
@@ -155,8 +168,10 @@ and statement =
   (** GNU "asm" support. *)
   | STAT_LINE of statement * string * int
   (** Information the filename and the line number of the contained statement. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 and gnu_asm_arg =  string * string * expression
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (* Binary operators identifiers. *)
 and binary_operator =
@@ -189,6 +204,7 @@ and binary_operator =
   | XOR_ASSIGN  (** "^=" operator. *)
   | SHL_ASSIGN  (** "<<=" operator. *)
   | SHR_ASSIGN  (** ">>=" operator. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Unary operators identifiers. *)
 and unary_operator =
@@ -202,6 +218,7 @@ and unary_operator =
   | PREDECR (** "--" pre-decrementation. *)
   | POSINCR (** "++" post-incrementation. *)
   | POSDECR (** "--" post-decrementation. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Expressions. *)
 and expression =
@@ -240,6 +257,7 @@ and expression =
   (** Designated initialization, in compound constants only. *)
   | EXPR_LINE of expression * string * int
   (** Record the file and line of the expression. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** Constant values. *)
 and constant =
@@ -254,9 +272,11 @@ and constant =
   | CONST_COMPOUND of expression list
   (** Compound values between braces. Only valid for variable
       initialization. *)
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** GNU special attribute list.*)
 and gnu_attrs = gnu_attr list
+  [@@deriving show, compare, equal, sexp_of, hash]
 
 (** GNU special attribute. *)
 and gnu_attr =
@@ -273,3 +293,4 @@ and gnu_attr =
   | GNU_INLINE
   (** Support of __inline keyword *)
   | GNU_TYPE_ARG of base_type * storage
+  [@@deriving show, compare, equal, sexp_of, hash]
