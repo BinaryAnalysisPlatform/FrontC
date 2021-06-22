@@ -1,6 +1,6 @@
 (* cabs -- abstract syntax for FrontC *)
 
-let version = "Cabs 4.0 Hugues Cass� et al."
+let version = "Cabs 4.0 Hugues Cassé et al."
 exception BadModifier
 exception BadType
 
