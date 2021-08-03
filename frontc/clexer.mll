@@ -3,13 +3,13 @@
  ** Project: FrontC
  ** File: frontc.mll
  ** Version: 4.1
- ** Author: Hugues Cassé et al
+ ** Author: Hugues CassÃ© et al
 *)
 {
 open Ctokens
 exception Eof
 exception InternalError of string
-let version = "Clexer V1.0f 10.8.99 Hugues Cassé"
+let version = "Clexer V1.0f 10.8.99 Hugues CassÃ©"
 
 
 (*
@@ -65,7 +65,7 @@ let underline_error (buffer : string) (start : int) (stop : int) =
   (
     (if start' > 0 then (String.sub buffer 0 start') else "")
     ^ "\027[4m"
-    ^ (if (stop' - start') <> 0
+    ^ (if 0 <= start' && start' < stop' && stop <= len
        then (String.sub buffer start' (stop' - start' ) )
        else ""
       )
