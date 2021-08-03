@@ -65,7 +65,7 @@ let underline_error (buffer : string) (start : int) (stop : int) =
   (
     (if start' > 0 then (String.sub buffer 0 start') else "")
     ^ "\027[4m"
-    ^ (if (stop' - start') > 0 && (stop' - start') < len
+    ^ (if 0 <= start' && start' < stop' && stop <= len
        then (String.sub buffer start' (stop' - start' ) )
        else ""
       )
