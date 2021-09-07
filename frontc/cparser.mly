@@ -79,7 +79,7 @@
         | BITFIELD (NO_SIGN, exp) ->
            (match tst with
               INT (_, sign) -> BITFIELD (sign, exp)
-            | _ -> raise BadType)
+            | _ -> typ)
         | _ -> raise BadType in
       set tin
 
