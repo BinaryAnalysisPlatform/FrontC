@@ -1,11 +1,11 @@
 %{
     open Cabs
 
-    exception Error
+    exception ParseError
 
     let parse_error startpos endpos =
       Clexer.display_error "Syntax error" startpos endpos;
-      raise Error
+      raise ParseError
 
     (*
      ** Type analysis
