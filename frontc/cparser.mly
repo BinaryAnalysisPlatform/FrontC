@@ -774,6 +774,8 @@ enum_type:
     {ENUM ("", List.rev $3)}
   |  ENUM type_name LBRACE enum_list RBRACE
     {ENUM ($2, List.rev $4)}
+  |  ENUM type_name LBRACE enum_list COMMA RBRACE
+    {ENUM ($2, List.rev $4)}
 ;
 type_name:
 IDENT       {$1}
